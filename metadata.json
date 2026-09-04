@@ -1,0 +1,6 @@
+{
+  "name": "Lombok Explorer Admin",
+  "description": "Administrative dashboard for Lombok Explorer managing destinations, categories, culinary spots, accommodations, users, reviews, feeds, itinerary templates, and audit logs.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
