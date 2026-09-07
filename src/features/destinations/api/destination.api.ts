@@ -7,6 +7,7 @@ import {
   DestinationFilters,
   CreateDestinationDto,
   UpdateDestinationDto,
+  CreateDestinationImageRequest,
   BulkDeleteDestinationsDto,
   BulkUpdateDestinationStatusDto,
   BulkActionResponse,
@@ -53,7 +54,7 @@ export const destinationApi = {
 
   createDestinationImage: async (
     destinationId: string,
-    data: { imageUrl: string; caption?: string; altText?: string; orderIndex?: number; isPrimary?: boolean }
+    data: CreateDestinationImageRequest
   ): Promise<ApiResponse<DestinationImage>> => {
     return apiClient.post<ApiResponse<DestinationImage>>(`/destinations/${destinationId}/images`, data);
   },

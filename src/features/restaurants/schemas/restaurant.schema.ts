@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { CloudinaryAsset } from '@/types/upload.types';
 
 export const restaurantSchema = z.object({
   name: z.string().min(2, 'Nama restoran minimal 2 karakter').max(150, 'Nama terlalu panjang'),
@@ -21,7 +22,9 @@ export const restaurantSchema = z.object({
   latitude: z.coerce.number().min(-90).max(90),
   longitude: z.coerce.number().min(-180).max(180),
   openingHours: z.string().default('09:00 - 22:00 WITA'),
-  coverImageUrl: z.string().url('URL gambar sampul harus valid'),
+  coverImage: z.custom<CloudinaryAsset | string | null>().optional(),
+  coverImageUrl: z.string().optional(),
+  images: z.array(z.custom<CloudinaryAsset | string>()).default([]),
   isHalalCertified: z.boolean().default(true),
   status: z.enum(['DRAFT', 'PUBLISHED', 'ARCHIVED']).default('PUBLISHED'),
   isFeatured: z.boolean().default(false),

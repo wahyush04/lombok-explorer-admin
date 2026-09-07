@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { destinationSchema, DestinationFormData } from '../schemas/destination.schema';
@@ -13,6 +13,8 @@ import { Select } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { DestinationDetail } from '@/types/destination.types';
 import { REGIONS } from '@/types/common.types';
+import { ImageUploader } from '@/components/common/ImageUploader';
+import { CloudinaryAsset } from '@/types/upload.types';
 
 interface DestinationFormModalProps {
   open: boolean;
@@ -29,6 +31,7 @@ export function DestinationFormModal({
 }: DestinationFormModalProps) {
   const queryClient = useQueryClient();
   const isEdit = Boolean(destinationToEdit);
+  const [isUploading, setIsUploading] = useState(false);
 
   // Fetch categories for selection
   const { data: catData } = useQuery({
@@ -68,7 +71,9 @@ export function DestinationFormModal({
       bestVisitingTime: 'Pagi atau sore hari',
       difficulty: 'EASY',
       tags: ['Pantai', 'Sunset'],
+      coverImage: null,
       coverImageUrl: 'https://images.unsplash.com/photo-1544644181-1484b3fdfc62?auto=format&fit=crop&w=1000&q=80',
+      images: [],
       facilities: ['Area Parkir', 'Toilet'],
       tips: ['Gunakan tabir surya'],
       status: 'PUBLISHED',
@@ -97,7 +102,17 @@ export function DestinationFormModal({
         bestVisitingTime: destinationToEdit.bestVisitingTime || '',
         difficulty: (destinationToEdit.difficulty as any) || 'EASY',
         tags: destinationToEdit.tags || [],
+        coverImage: destinationToEdit.coverImageUrl
+          ? {
+              publicId: 'existing_cover',
+              secureUrl: destinationToEdit.coverImageUrl,
+              resourceType: 'image',
+              isPrimary: true,
+              orderIndex: 0,
+            }
+          : null,
         coverImageUrl: destinationToEdit.coverImageUrl,
+        images: destinationToEdit.images || [],
         facilities: destinationToEdit.facilities || [],
         tips: destinationToEdit.tips || [],
         status: destinationToEdit.status,
@@ -122,7 +137,9 @@ export function DestinationFormModal({
         bestVisitingTime: 'Sore hari menjelang sunset',
         difficulty: 'EASY',
         tags: ['Wisata Alam', 'Pantai'],
-        coverImageUrl: 'https://images.unsplash.com/photo-1544644181-1484b3fdfc62',
+        coverImage: null,
+        coverImageUrl: '',
+        images: [],
         facilities: ['Area Parkir', 'Toilet'],
         tips: ['Bawa air minum'],
         status: 'PUBLISHED',
@@ -148,7 +165,14 @@ export function DestinationFormModal({
   });
 
   const onSubmit = (data: any) => {
-    mutation.mutate(data);
+    if (isUploading) {
+      return;
+    }
+    const payload = { ...data };
+    if (payload.coverImage && typeof payload.coverImage === 'object' && 'secureUrl' in payload.coverImage) {
+      payload.coverImageUrl = payload.coverImage.secureUrl;
+    }
+    mutation.mutate(payload);
   };
 
   const isFeaturedValue = watch('isFeatured');
@@ -274,10 +298,35 @@ export function DestinationFormModal({
           </div>
         </div>
 
-        {/* Media & Tags */}
-        <div>
-          <label className="block text-xs font-semibold text-slate-700 mb-1">URL Gambar Sampul *</label>
-          <Input placeholder="https://images.unsplash.com/..." error={errors.coverImageUrl?.message} {...register('coverImageUrl')} />
+        {/* Media: Cover Image & Gallery */}
+        <div className="space-y-4 pt-2 border-t border-slate-100">
+          <ImageUploader
+            resourceType="DESTINATION"
+            resourceId={destinationToEdit?.id}
+            multiple={false}
+            label="Foto Sampul Destinasi *"
+            description="Unggah foto utama beresolusi tinggi untuk destinasi (JPG, PNG, atau WebP)"
+            value={watch('coverImage')}
+            onChange={(asset) => {
+              setValue('coverImage', asset, { shouldValidate: true });
+              setValue('coverImageUrl', asset?.secureUrl || '', { shouldValidate: true });
+            }}
+            onUploadingChange={setIsUploading}
+            error={(errors.coverImage?.message as string) || errors.coverImageUrl?.message}
+          />
+
+          <ImageUploader
+            resourceType="DESTINATION"
+            resourceId={destinationToEdit?.id}
+            multiple={true}
+            maxFiles={10}
+            label="Galeri Foto Destinasi"
+            description="Unggah hingga 10 foto pendukung untuk galeri destinasi. Anda dapat menandai foto utama dan mengubah urutan."
+            value={watch('images')}
+            onChange={(assets) => setValue('images', assets, { shouldValidate: true })}
+            onUploadingChange={setIsUploading}
+            showCaptionFields={true}
+          />
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -306,8 +355,8 @@ export function DestinationFormModal({
           <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={mutation.isPending}>
             Batal
           </Button>
-          <Button type="submit" isLoading={mutation.isPending}>
-            {isEdit ? 'Simpan Perubahan' : 'Terbitkan Destinasi'}
+          <Button type="submit" isLoading={mutation.isPending} disabled={mutation.isPending || isUploading}>
+            {isUploading ? 'Mengunggah Gambar...' : isEdit ? 'Simpan Perubahan' : 'Terbitkan Destinasi'}
           </Button>
         </DialogFooter>
       </form>

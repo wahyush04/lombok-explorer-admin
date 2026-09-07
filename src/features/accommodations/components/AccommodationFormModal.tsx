@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { accommodationSchema, AccommodationFormData } from '../schemas/accommodation.schema';
@@ -12,6 +12,8 @@ import { Select } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Accommodation } from '@/types/accommodation.types';
 import { REGIONS } from '@/types/common.types';
+import { ImageUploader } from '@/components/common/ImageUploader';
+import { CloudinaryAsset } from '@/types/upload.types';
 
 interface AccommodationFormModalProps {
   open: boolean;
@@ -28,6 +30,7 @@ export function AccommodationFormModal({
 }: AccommodationFormModalProps) {
   const queryClient = useQueryClient();
   const isEdit = Boolean(accommodationToEdit);
+  const [isUploading, setIsUploading] = useState(false);
 
   const {
     register,
@@ -49,7 +52,9 @@ export function AccommodationFormModal({
       region: 'LOMBOK_BARAT',
       latitude: -8.4912,
       longitude: 116.0398,
+      coverImage: null,
       coverImageUrl: 'https://images.unsplash.com/photo-1571896349842-33c89424de2d',
+      images: [],
       facilities: ['WiFi Gratis', 'Kolam Renang', 'Restoran'],
       amenities: ['AC', 'Kamar Mandi Pribadi'],
       contactPhone: '',
@@ -72,7 +77,17 @@ export function AccommodationFormModal({
         region: accommodationToEdit.region,
         latitude: accommodationToEdit.latitude,
         longitude: accommodationToEdit.longitude,
+        coverImage: accommodationToEdit.coverImageUrl
+          ? {
+              publicId: 'existing_cover',
+              secureUrl: accommodationToEdit.coverImageUrl,
+              resourceType: 'image',
+              isPrimary: true,
+              orderIndex: 0,
+            }
+          : null,
         coverImageUrl: accommodationToEdit.coverImageUrl,
+        images: accommodationToEdit.images || [],
         facilities: accommodationToEdit.facilities || [],
         amenities: accommodationToEdit.amenities || [],
         contactPhone: accommodationToEdit.contactPhone || '',
@@ -92,7 +107,9 @@ export function AccommodationFormModal({
         region: 'LOMBOK_BARAT',
         latitude: -8.4912,
         longitude: 116.0398,
-        coverImageUrl: 'https://images.unsplash.com/photo-1571896349842-33c89424de2d',
+        coverImage: null,
+        coverImageUrl: '',
+        images: [],
         facilities: ['WiFi Cepat', 'Kolam Renang', 'Sarapan Termasuk'],
         amenities: ['AC', 'Air Hangat'],
         contactPhone: '',
@@ -120,7 +137,12 @@ export function AccommodationFormModal({
   });
 
   const onSubmit = (data: any) => {
-    mutation.mutate(data);
+    if (isUploading) return;
+    const payload = { ...data };
+    if (payload.coverImage && typeof payload.coverImage === 'object' && 'secureUrl' in payload.coverImage) {
+      payload.coverImageUrl = payload.coverImage.secureUrl;
+    }
+    mutation.mutate(payload);
   };
 
   const isFeaturedValue = watch('isFeatured');
@@ -204,9 +226,34 @@ export function AccommodationFormModal({
           </div>
         </div>
 
-        <div>
-          <label className="block text-xs font-semibold text-slate-700 mb-1">URL Foto Sampul Akomodasi *</label>
-          <Input placeholder="https://images.unsplash.com/..." error={errors.coverImageUrl?.message} {...register('coverImageUrl')} />
+        {/* Media: Cover Image & Gallery */}
+        <div className="space-y-4 pt-2 border-t border-slate-100">
+          <ImageUploader
+            resourceType="ACCOMMODATION"
+            resourceId={accommodationToEdit?.id}
+            multiple={false}
+            label="Foto Sampul Akomodasi *"
+            description="Pilih atau seret foto utama properti / resort untuk diunggah langsung ke Cloudinary"
+            value={watch('coverImage')}
+            onChange={(asset) => {
+              setValue('coverImage', asset, { shouldValidate: true });
+              setValue('coverImageUrl', asset?.secureUrl || '', { shouldValidate: true });
+            }}
+            onUploadingChange={setIsUploading}
+            error={(errors.coverImage?.message as string) || errors.coverImageUrl?.message}
+          />
+
+          <ImageUploader
+            resourceType="ACCOMMODATION"
+            resourceId={accommodationToEdit?.id}
+            multiple={true}
+            maxFiles={10}
+            label="Galeri Foto Kamar & Fasilitas Akomodasi"
+            description="Unggah hingga 10 foto pendukung kamar, kolam renang, dan fasilitas resort"
+            value={watch('images')}
+            onChange={(assets) => setValue('images', assets, { shouldValidate: true })}
+            onUploadingChange={setIsUploading}
+          />
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
@@ -235,8 +282,8 @@ export function AccommodationFormModal({
           <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={mutation.isPending}>
             Batal
           </Button>
-          <Button type="submit" isLoading={mutation.isPending}>
-            {isEdit ? 'Simpan Perubahan' : 'Simpan Akomodasi'}
+          <Button type="submit" isLoading={mutation.isPending} disabled={mutation.isPending || isUploading}>
+            {isUploading ? 'Mengunggah Gambar...' : isEdit ? 'Simpan Perubahan' : 'Simpan Akomodasi'}
           </Button>
         </DialogFooter>
       </form>

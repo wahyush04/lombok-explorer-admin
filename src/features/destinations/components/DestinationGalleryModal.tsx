@@ -8,6 +8,8 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
 import { Image as ImageIcon, Plus, Trash2, CheckCircle, Star } from 'lucide-react';
 import { Destination } from '@/types/destination.types';
+import { ImageUploader } from '@/components/common/ImageUploader';
+import { CloudinaryAsset } from '@/types/upload.types';
 
 interface DestinationGalleryModalProps {
   open: boolean;
@@ -21,7 +23,8 @@ export function DestinationGalleryModal({
   destination,
 }: DestinationGalleryModalProps) {
   const queryClient = useQueryClient();
-  const [newImageUrl, setNewImageUrl] = useState('');
+  const [uploadedAsset, setUploadedAsset] = useState<CloudinaryAsset | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
   const [caption, setCaption] = useState('');
   const [altText, setAltText] = useState('');
   const [showAddForm, setShowAddForm] = useState(false);
@@ -38,17 +41,24 @@ export function DestinationGalleryModal({
 
   const addImageMutation = useMutation({
     mutationFn: async () => {
-      if (!destination?.id || !newImageUrl) return;
+      if (!destination?.id || !uploadedAsset) return;
       return destinationApi.createDestinationImage(destination.id, {
-        imageUrl: newImageUrl,
+        image: uploadedAsset,
+        publicId: uploadedAsset.publicId,
+        secureUrl: uploadedAsset.secureUrl,
+        imageUrl: uploadedAsset.secureUrl,
+        width: uploadedAsset.width || undefined,
+        height: uploadedAsset.height || undefined,
+        format: uploadedAsset.format || undefined,
         caption,
         altText,
         isPrimary: images?.length === 0,
+        orderIndex: images?.length || 0,
       });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['destination-images', destination?.id] });
-      setNewImageUrl('');
+      setUploadedAsset(null);
       setCaption('');
       setAltText('');
       setShowAddForm(false);
@@ -99,17 +109,21 @@ export function DestinationGalleryModal({
             className="w-full border-dashed"
           >
             <Plus className="h-4 w-4 mr-1.5" />
-            Tambah URL Foto Baru ke Galeri
+            Tambah Foto Baru ke Galeri
           </Button>
         ) : (
           <div className="p-3.5 rounded-xl border border-emerald-200 bg-emerald-50/40 space-y-2.5">
-            <h4 className="text-xs font-semibold text-emerald-950">Formulir Tambah Foto</h4>
+            <h4 className="text-xs font-semibold text-emerald-950">Formulir Tambah Foto Galeri</h4>
             <div>
-              <label className="block text-[11px] font-medium text-slate-700 mb-1">URL Gambar (JPG/PNG/WebP) *</label>
-              <Input
-                placeholder="https://images.unsplash.com/..."
-                value={newImageUrl}
-                onChange={(e) => setNewImageUrl(e.target.value)}
+              <ImageUploader
+                resourceType="DESTINATION_IMAGE"
+                resourceId={destination.id}
+                multiple={false}
+                label="Unggah Foto Galeri *"
+                description="Pilih foto resolusi tinggi untuk diunggah langsung ke Cloudinary"
+                value={uploadedAsset}
+                onChange={(asset) => setUploadedAsset(asset)}
+                onUploadingChange={setIsUploading}
               />
             </div>
             <div className="grid grid-cols-2 gap-2">
@@ -135,7 +149,10 @@ export function DestinationGalleryModal({
                 type="button"
                 variant="ghost"
                 size="sm"
-                onClick={() => setShowAddForm(false)}
+                onClick={() => {
+                  setShowAddForm(false);
+                  setUploadedAsset(null);
+                }}
                 className="text-xs h-7"
               >
                 Batal
@@ -145,10 +162,10 @@ export function DestinationGalleryModal({
                 size="sm"
                 onClick={() => addImageMutation.mutate()}
                 isLoading={addImageMutation.isPending}
-                disabled={!newImageUrl}
+                disabled={!uploadedAsset || isUploading}
                 className="text-xs h-7"
               >
-                Simpan Foto
+                {isUploading ? 'Mengunggah...' : 'Simpan Foto'}
               </Button>
             </div>
           </div>

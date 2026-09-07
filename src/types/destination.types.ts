@@ -1,4 +1,5 @@
 import { PaginationMeta, Region } from './auth.types';
+import { CloudinaryAsset } from './upload.types';
 
 export type DestinationStatus = 'PUBLISHED' | 'DRAFT' | 'ARCHIVED';
 export type DestinationDifficulty = 'EASY' | 'MODERATE' | 'CHALLENGING' | 'EXTREME';
@@ -79,8 +80,9 @@ export interface CreateDestinationRequest {
   bestVisitingTime?: string;
   difficulty?: DestinationDifficulty;
   tags?: string[];
+  coverImage?: CloudinaryAsset | string;
   coverImageUrl?: string;
-  images?: string[];
+  images?: (CloudinaryAsset | string)[];
   facilities?: string[];
   tips?: string[];
   status?: DestinationStatus;
@@ -106,7 +108,9 @@ export interface UpdateDestinationRequest {
   bestVisitingTime?: string;
   difficulty?: DestinationDifficulty;
   tags?: string[];
+  coverImage?: CloudinaryAsset | string;
   coverImageUrl?: string;
+  images?: (CloudinaryAsset | string)[];
   facilities?: string[];
   tips?: string[];
   status?: DestinationStatus;
@@ -170,7 +174,13 @@ export interface DestinationImageDetailResponse {
 }
 
 export interface CreateDestinationImageRequest {
+  image?: CloudinaryAsset | string;
+  publicId?: string;
+  secureUrl?: string;
   imageUrl?: string;
+  width?: number;
+  height?: number;
+  format?: string;
   caption?: string;
   altText?: string;
   orderIndex?: number;
@@ -178,7 +188,13 @@ export interface CreateDestinationImageRequest {
 }
 
 export interface UpdateDestinationImageRequest {
+  image?: CloudinaryAsset | string;
+  publicId?: string;
+  secureUrl?: string;
   imageUrl?: string;
+  width?: number;
+  height?: number;
+  format?: string;
   caption?: string;
   altText?: string;
   orderIndex?: number;

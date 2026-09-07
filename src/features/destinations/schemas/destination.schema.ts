@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { CloudinaryAsset } from '@/types/upload.types';
 
 export const destinationSchema = z.object({
   name: z.string().min(3, 'Nama destinasi minimal 3 karakter').max(150, 'Nama terlalu panjang'),
@@ -26,7 +27,9 @@ export const destinationSchema = z.object({
   bestVisitingTime: z.string().optional(),
   difficulty: z.enum(['EASY', 'MODERATE', 'CHALLENGING', 'EXTREME']).default('EASY'),
   tags: z.array(z.string()).default([]),
-  coverImageUrl: z.string().url('URL gambar sampul harus berupa URL valid'),
+  coverImage: z.custom<CloudinaryAsset | string | null>().optional(),
+  coverImageUrl: z.string().optional(),
+  images: z.array(z.custom<CloudinaryAsset | string>()).default([]),
   facilities: z.array(z.string()).default([]),
   tips: z.array(z.string()).default([]),
   status: z.enum(['DRAFT', 'PUBLISHED', 'ARCHIVED']).default('PUBLISHED'),

@@ -1,5 +1,6 @@
 import { PaginationMeta } from './auth.types';
 import { DestinationStatus } from './destination.types';
+import { CloudinaryAsset } from './upload.types';
 
 export interface AdminCategoryDto {
   id: string;
@@ -32,6 +33,7 @@ export interface CreateCategoryRequest {
   slug?: string;
   description: string;
   iconName: string;
+  coverImage?: CloudinaryAsset | string;
   coverImageUrl?: string;
 }
 
@@ -40,6 +42,7 @@ export interface UpdateCategoryRequest {
   slug?: string;
   description?: string;
   iconName?: string;
+  coverImage?: CloudinaryAsset | string;
   coverImageUrl?: string;
 }
 

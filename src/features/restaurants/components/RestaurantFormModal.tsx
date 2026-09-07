@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { restaurantSchema, RestaurantFormData } from '../schemas/restaurant.schema';
@@ -12,6 +12,8 @@ import { Select } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Restaurant } from '@/types/restaurant.types';
 import { REGIONS } from '@/types/common.types';
+import { ImageUploader } from '@/components/common/ImageUploader';
+import { CloudinaryAsset } from '@/types/upload.types';
 
 interface RestaurantFormModalProps {
   open: boolean;
@@ -28,6 +30,7 @@ export function RestaurantFormModal({
 }: RestaurantFormModalProps) {
   const queryClient = useQueryClient();
   const isEdit = Boolean(restaurantToEdit);
+  const [isUploading, setIsUploading] = useState(false);
 
   const {
     register,
@@ -52,7 +55,9 @@ export function RestaurantFormModal({
       latitude: -8.5833,
       longitude: 116.1167,
       openingHours: '09:00 - 22:00 WITA',
+      coverImage: null,
       coverImageUrl: 'https://images.unsplash.com/photo-1544025162-d76694265947',
+      images: [],
       isHalalCertified: true,
       status: 'PUBLISHED',
       isFeatured: false,
@@ -75,7 +80,17 @@ export function RestaurantFormModal({
         latitude: restaurantToEdit.latitude,
         longitude: restaurantToEdit.longitude,
         openingHours: restaurantToEdit.openingHours || '',
+        coverImage: restaurantToEdit.coverImageUrl
+          ? {
+              publicId: 'existing_cover',
+              secureUrl: restaurantToEdit.coverImageUrl,
+              resourceType: 'image',
+              isPrimary: true,
+              orderIndex: 0,
+            }
+          : null,
         coverImageUrl: restaurantToEdit.coverImageUrl,
+        images: restaurantToEdit.images || [],
         isHalalCertified: restaurantToEdit.isHalalCertified,
         status: restaurantToEdit.status,
         isFeatured: restaurantToEdit.isFeatured,
@@ -95,7 +110,9 @@ export function RestaurantFormModal({
         latitude: -8.5833,
         longitude: 116.1167,
         openingHours: '09:00 - 22:00 WITA',
-        coverImageUrl: 'https://images.unsplash.com/photo-1544025162-d76694265947',
+        coverImage: null,
+        coverImageUrl: '',
+        images: [],
         isHalalCertified: true,
         status: 'PUBLISHED',
         isFeatured: false,
@@ -120,7 +137,12 @@ export function RestaurantFormModal({
   });
 
   const onSubmit = (data: any) => {
-    mutation.mutate(data);
+    if (isUploading) return;
+    const payload = { ...data };
+    if (payload.coverImage && typeof payload.coverImage === 'object' && 'secureUrl' in payload.coverImage) {
+      payload.coverImageUrl = payload.coverImage.secureUrl;
+    }
+    mutation.mutate(payload);
   };
 
   const isHalalValue = watch('isHalalCertified');
@@ -222,9 +244,34 @@ export function RestaurantFormModal({
           </div>
         </div>
 
-        <div>
-          <label className="block text-xs font-semibold text-slate-700 mb-1">URL Foto Sampul Restoran *</label>
-          <Input placeholder="https://images.unsplash.com/..." error={errors.coverImageUrl?.message} {...register('coverImageUrl')} />
+        {/* Media: Cover Image & Gallery */}
+        <div className="space-y-4 pt-2 border-t border-slate-100">
+          <ImageUploader
+            resourceType="RESTAURANT"
+            resourceId={restaurantToEdit?.id}
+            multiple={false}
+            label="Foto Sampul Restoran *"
+            description="Pilih foto utama atau hidangan khas restoran untuk diunggah langsung ke Cloudinary"
+            value={watch('coverImage')}
+            onChange={(asset) => {
+              setValue('coverImage', asset, { shouldValidate: true });
+              setValue('coverImageUrl', asset?.secureUrl || '', { shouldValidate: true });
+            }}
+            onUploadingChange={setIsUploading}
+            error={(errors.coverImage?.message as string) || errors.coverImageUrl?.message}
+          />
+
+          <ImageUploader
+            resourceType="RESTAURANT"
+            resourceId={restaurantToEdit?.id}
+            multiple={true}
+            maxFiles={10}
+            label="Galeri Foto Menu & Suasana Restoran"
+            description="Unggah hingga 10 foto pendukung menu, hidangan, dan suasana restoran"
+            value={watch('images')}
+            onChange={(assets) => setValue('images', assets, { shouldValidate: true })}
+            onUploadingChange={setIsUploading}
+          />
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2">
@@ -264,8 +311,8 @@ export function RestaurantFormModal({
           <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={mutation.isPending}>
             Batal
           </Button>
-          <Button type="submit" isLoading={mutation.isPending}>
-            {isEdit ? 'Simpan Perubahan' : 'Simpan Restoran'}
+          <Button type="submit" isLoading={mutation.isPending} disabled={mutation.isPending || isUploading}>
+            {isUploading ? 'Mengunggah Gambar...' : isEdit ? 'Simpan Perubahan' : 'Simpan Restoran'}
           </Button>
         </DialogFooter>
       </form>

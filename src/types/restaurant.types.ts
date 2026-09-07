@@ -1,5 +1,6 @@
 import { PaginationMeta, Region } from './auth.types';
 import { DestinationStatus } from './destination.types';
+import { CloudinaryAsset } from './upload.types';
 
 export interface AdminRestaurantDto {
   id: string;
@@ -55,8 +56,9 @@ export interface CreateRestaurantRequest {
   latitude: number;
   longitude: number;
   openingHours: string;
-  coverImageUrl: string;
-  images?: string[];
+  coverImage?: CloudinaryAsset | string;
+  coverImageUrl?: string;
+  images?: (CloudinaryAsset | string)[];
   isHalalCertified?: boolean;
   status?: DestinationStatus;
   isFeatured?: boolean;
@@ -76,8 +78,9 @@ export interface UpdateRestaurantRequest {
   latitude?: number;
   longitude?: number;
   openingHours?: string;
+  coverImage?: CloudinaryAsset | string;
   coverImageUrl?: string;
-  images?: string[];
+  images?: (CloudinaryAsset | string)[];
   isHalalCertified?: boolean;
   status?: DestinationStatus;
   isFeatured?: boolean;

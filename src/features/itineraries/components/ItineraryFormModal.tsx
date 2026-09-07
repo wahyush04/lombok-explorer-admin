@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { itinerarySchema, ItineraryFormData } from '../schemas/itinerary.schema';
@@ -10,8 +10,10 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
-import { ItineraryTemplate, ItineraryDay } from '@/types/itinerary.types';
+import { ItineraryTemplate, AdminTemplateDayInput } from '@/types/itinerary.types';
 import { Plus, Trash2, Calendar } from 'lucide-react';
+import { ImageUploader } from '@/components/common/ImageUploader';
+import { CloudinaryAsset } from '@/types/upload.types';
 
 interface ItineraryFormModalProps {
   open: boolean;
@@ -28,18 +30,8 @@ export function ItineraryFormModal({
 }: ItineraryFormModalProps) {
   const queryClient = useQueryClient();
   const isEdit = Boolean(itineraryToEdit);
-
-  const [days, setDays] = useState<ItineraryDay[]>([
-    {
-      dayNumber: 1,
-      title: 'Hari 1: Eksplorasi Pantai Selatan',
-      description: 'Menikmati keindahan pasir merica dan bukit Merese',
-      activities: [
-        { time: '09:00', title: 'Tiba di Pantai Tanjung Aan', description: 'Foto dan santai kelapa muda' },
-        { time: '16:00', title: 'Sunset di Bukit Merese', description: 'Menikmati pemandangan laut dari atas tebing' },
-      ],
-    },
-  ]);
+  const [isUploading, setIsUploading] = useState(false);
+  const [days, setDays] = useState<AdminTemplateDayInput[]>([]);
 
   const {
     register,
@@ -57,6 +49,7 @@ export function ItineraryFormModal({
       durationDays: 3,
       estimatedCost: 1500000,
       currency: 'IDR',
+      coverImage: null,
       coverImageUrl: 'https://images.unsplash.com/photo-1544644181-1484b3fdfc62',
       tags: ['Wisata Alam', 'Pantai', 'Keluarga'],
       status: 'PUBLISHED',
@@ -74,6 +67,15 @@ export function ItineraryFormModal({
         durationDays: itineraryToEdit.durationDays,
         estimatedCost: itineraryToEdit.estimatedCost || 1500000,
         currency: itineraryToEdit.currency || 'IDR',
+        coverImage: itineraryToEdit.coverImageUrl
+          ? {
+              publicId: 'existing_cover',
+              secureUrl: itineraryToEdit.coverImageUrl,
+              resourceType: 'image',
+              isPrimary: true,
+              orderIndex: 0,
+            }
+          : null,
         coverImageUrl: itineraryToEdit.coverImageUrl,
         tags: itineraryToEdit.tags || [],
         status: itineraryToEdit.status,
@@ -91,7 +93,8 @@ export function ItineraryFormModal({
         durationDays: 3,
         estimatedCost: 1500000,
         currency: 'IDR',
-        coverImageUrl: 'https://images.unsplash.com/photo-1544644181-1484b3fdfc62',
+        coverImage: null,
+        coverImageUrl: '',
         tags: ['Wisata Bahari', 'Petualangan'],
         status: 'PUBLISHED',
         isFeatured: false,
@@ -130,7 +133,10 @@ export function ItineraryFormModal({
 
   const mutation = useMutation({
     mutationFn: async (data: ItineraryFormData) => {
-      const payload = { ...data, days };
+      const payload: any = { ...data, days };
+      if (payload.coverImage && typeof payload.coverImage === 'object' && 'secureUrl' in payload.coverImage) {
+        payload.coverImageUrl = payload.coverImage.secureUrl;
+      }
       if (isEdit && itineraryToEdit) {
         return itineraryApi.updateItinerary(itineraryToEdit.id, payload);
       } else {
@@ -146,6 +152,7 @@ export function ItineraryFormModal({
   });
 
   const onSubmit = (data: any) => {
+    if (isUploading) return;
     mutation.mutate(data);
   };
 
@@ -205,8 +212,20 @@ export function ItineraryFormModal({
         </div>
 
         <div>
-          <label className="block text-xs font-semibold text-slate-700 mb-1">URL Gambar Sampul Itinerary *</label>
-          <Input placeholder="https://images.unsplash.com/..." error={errors.coverImageUrl?.message} {...register('coverImageUrl')} />
+          <ImageUploader
+            resourceType="ITINERARY_TEMPLATE"
+            resourceId={itineraryToEdit?.id}
+            multiple={false}
+            label="Foto Sampul Itinerary *"
+            description="Pilih foto landscape menarik untuk sampul paket rencana perjalanan"
+            value={watch('coverImage')}
+            onChange={(asset) => {
+              setValue('coverImage', asset, { shouldValidate: true });
+              setValue('coverImageUrl', asset?.secureUrl || '', { shouldValidate: true });
+            }}
+            onUploadingChange={setIsUploading}
+            error={(errors.coverImage?.message as string) || errors.coverImageUrl?.message}
+          />
         </div>
 
         <div className="flex items-center space-x-2 pt-1">
@@ -281,8 +300,8 @@ export function ItineraryFormModal({
           <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={mutation.isPending}>
             Batal
           </Button>
-          <Button type="submit" isLoading={mutation.isPending}>
-            {isEdit ? 'Simpan Perubahan' : 'Simpan Template'}
+          <Button type="submit" isLoading={mutation.isPending} disabled={mutation.isPending || isUploading}>
+            {isUploading ? 'Mengunggah Gambar...' : isEdit ? 'Simpan Perubahan' : 'Simpan Template'}
           </Button>
         </DialogFooter>
       </form>

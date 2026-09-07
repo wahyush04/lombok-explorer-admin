@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { categorySchema, CategoryFormData } from '../schemas/category.schema';
@@ -10,6 +10,8 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select } from '@/components/ui/select';
 import { Category } from '@/types/category.types';
+import { ImageUploader } from '@/components/common/ImageUploader';
+import { CloudinaryAsset } from '@/types/upload.types';
 
 interface CategoryFormModalProps {
   open: boolean;
@@ -26,11 +28,14 @@ export function CategoryFormModal({
 }: CategoryFormModalProps) {
   const queryClient = useQueryClient();
   const isEdit = Boolean(categoryToEdit);
+  const [isUploading, setIsUploading] = useState(false);
 
   const {
     register,
     handleSubmit,
     reset,
+    setValue,
+    watch,
     formState: { errors },
   } = useForm<CategoryFormData>({
     resolver: zodResolver(categorySchema) as any,
@@ -39,6 +44,7 @@ export function CategoryFormModal({
       slug: '',
       description: '',
       iconName: 'waves',
+      coverImage: null,
       coverImageUrl: 'https://images.unsplash.com/photo-1544644181-1484b3fdfc62',
       status: 'PUBLISHED',
     },
@@ -51,6 +57,15 @@ export function CategoryFormModal({
         slug: categoryToEdit.slug,
         description: categoryToEdit.description || '',
         iconName: categoryToEdit.iconName || 'waves',
+        coverImage: categoryToEdit.coverImageUrl
+          ? {
+              publicId: 'existing_cover',
+              secureUrl: categoryToEdit.coverImageUrl,
+              resourceType: 'image',
+              isPrimary: true,
+              orderIndex: 0,
+            }
+          : null,
         coverImageUrl: categoryToEdit.coverImageUrl || '',
         status: categoryToEdit.status,
       });
@@ -60,7 +75,8 @@ export function CategoryFormModal({
         slug: '',
         description: '',
         iconName: 'waves',
-        coverImageUrl: 'https://images.unsplash.com/photo-1544644181-1484b3fdfc62',
+        coverImage: null,
+        coverImageUrl: '',
         status: 'PUBLISHED',
       });
     }
@@ -68,10 +84,14 @@ export function CategoryFormModal({
 
   const mutation = useMutation({
     mutationFn: async (data: CategoryFormData) => {
+      const payload: any = { ...data };
+      if (payload.coverImage && typeof payload.coverImage === 'object' && 'secureUrl' in payload.coverImage) {
+        payload.coverImageUrl = payload.coverImage.secureUrl;
+      }
       if (isEdit && categoryToEdit) {
-        return categoryApi.updateCategory(categoryToEdit.id, data);
+        return categoryApi.updateCategory(categoryToEdit.id, payload);
       } else {
-        return categoryApi.createCategory(data);
+        return categoryApi.createCategory(payload);
       }
     },
     onSuccess: () => {
@@ -84,6 +104,7 @@ export function CategoryFormModal({
   });
 
   const onSubmit = (data: any) => {
+    if (isUploading) return;
     mutation.mutate(data);
   };
 
@@ -141,16 +162,28 @@ export function CategoryFormModal({
         </div>
 
         <div>
-          <label className="block text-xs font-semibold text-slate-700 mb-1">URL Gambar Sampul Kategori</label>
-          <Input placeholder="https://images.unsplash.com/..." error={errors.coverImageUrl?.message} {...register('coverImageUrl')} />
+          <ImageUploader
+            resourceType="CATEGORY"
+            resourceId={categoryToEdit?.id}
+            multiple={false}
+            label="Foto Sampul Kategori (Opsional)"
+            description="Pilih foto sampul representatif untuk kategori ini"
+            value={watch('coverImage')}
+            onChange={(asset) => {
+              setValue('coverImage', asset, { shouldValidate: true });
+              setValue('coverImageUrl', asset?.secureUrl || '', { shouldValidate: true });
+            }}
+            onUploadingChange={setIsUploading}
+            error={(errors.coverImage?.message as string) || errors.coverImageUrl?.message}
+          />
         </div>
 
         <DialogFooter className="pt-3 border-t border-slate-100">
           <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={mutation.isPending}>
             Batal
           </Button>
-          <Button type="submit" isLoading={mutation.isPending}>
-            {isEdit ? 'Simpan Perubahan' : 'Simpan Kategori'}
+          <Button type="submit" isLoading={mutation.isPending} disabled={mutation.isPending || isUploading}>
+            {isUploading ? 'Mengunggah Gambar...' : isEdit ? 'Simpan Perubahan' : 'Simpan Kategori'}
           </Button>
         </DialogFooter>
       </form>

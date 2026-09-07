@@ -1,4 +1,5 @@
 import { PaginationMeta } from './auth.types';
+import { CloudinaryAsset } from './upload.types';
 
 export type ItineraryTravelStyle =
   | 'NATURE_ADVENTURE'
@@ -110,6 +111,7 @@ export interface AdminTemplateDetailResponse {
 export interface CreateItineraryTemplateRequest {
   title: string;
   description?: string | null;
+  coverImage?: CloudinaryAsset | string | null;
   coverImageUrl?: string | null;
   totalDays?: number;
   travelStyle?: ItineraryTravelStyle;
@@ -128,6 +130,7 @@ export interface CreateItineraryTemplateRequest {
 export interface UpdateItineraryTemplateRequest {
   title?: string;
   description?: string | null;
+  coverImage?: CloudinaryAsset | string | null;
   coverImageUrl?: string | null;
   totalDays?: number;
   travelStyle?: ItineraryTravelStyle;

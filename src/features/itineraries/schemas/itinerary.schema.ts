@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { CloudinaryAsset } from '@/types/upload.types';
 
 export const itineraryDayActivitySchema = z.object({
   time: z.string().optional(),
@@ -22,7 +23,8 @@ export const itinerarySchema = z.object({
   durationDays: z.coerce.number().min(1, 'Durasi minimal 1 hari').max(14, 'Durasi maksimal 14 hari'),
   estimatedCost: z.coerce.number().min(0).default(500000),
   currency: z.string().default('IDR'),
-  coverImageUrl: z.string().url('URL gambar sampul harus valid'),
+  coverImage: z.custom<CloudinaryAsset | string | null>().optional(),
+  coverImageUrl: z.string().optional(),
   tags: z.array(z.string()).default([]),
   status: z.enum(['DRAFT', 'PUBLISHED', 'ARCHIVED']).default('PUBLISHED'),
   isFeatured: z.boolean().default(false),

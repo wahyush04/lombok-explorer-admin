@@ -1,5 +1,6 @@
 import { PaginationMeta, Region } from './auth.types';
 import { DestinationStatus } from './destination.types';
+import { CloudinaryAsset } from './upload.types';
 
 export interface AdminAccommodationDto {
   id: string;
@@ -52,8 +53,9 @@ export interface CreateAccommodationRequest {
   region: Region;
   latitude: number;
   longitude: number;
-  coverImageUrl: string;
-  images?: string[];
+  coverImage?: CloudinaryAsset | string;
+  coverImageUrl?: string;
+  images?: (CloudinaryAsset | string)[];
   facilities?: string[];
   contactPhone?: string;
   websiteUrl?: string;
@@ -72,8 +74,9 @@ export interface UpdateAccommodationRequest {
   region?: Region;
   latitude?: number;
   longitude?: number;
+  coverImage?: CloudinaryAsset | string;
   coverImageUrl?: string;
-  images?: string[];
+  images?: (CloudinaryAsset | string)[];
   facilities?: string[];
   contactPhone?: string;
   websiteUrl?: string;
