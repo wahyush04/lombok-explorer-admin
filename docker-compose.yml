@@ -5,6 +5,7 @@ services:
       dockerfile: Dockerfile
       args:
         VITE_API_BASE_URL: ${VITE_API_BASE_URL:-http://34.142.205.101:3000/api/v1/admin}
+        VITE_MAPBOX_TOKEN: ${VITE_MAPBOX_TOKEN:-${MAPBOX_PUBLIC_TOKEN:-}}
     image: lombok-explorer-admin:latest
     container_name: lombok-explorer-admin
     restart: unless-stopped

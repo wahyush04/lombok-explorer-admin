@@ -14,6 +14,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { DestinationDetail } from '@/types/destination.types';
 import { REGIONS } from '@/types/common.types';
 import { ImageUploader } from '@/components/common/ImageUploader';
+import { LocationMapPicker } from '@/components/common/LocationMapPicker';
 import { CloudinaryAsset } from '@/types/upload.types';
 import { SupportedLocale } from '@/lib/constants/locales';
 import { TranslationCompleteness, calculateTranslationStatus } from '@/types/localization.types';
@@ -55,6 +56,7 @@ export function DestinationFormModal({
     handleSubmit,
     reset,
     watch,
+    setValue,
     setError,
     formState: { errors, isDirty },
   } = useForm<DestinationFormData>({
@@ -386,23 +388,25 @@ export function DestinationFormModal({
           </div>
         </div>
 
-        {/* Location & GPS Coordinates */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <div className="sm:col-span-1">
-            <label className="block text-xs font-semibold text-slate-700 mb-1">{t.destinations.locationName} *</label>
-            <Input placeholder="cth: Sengkol, Pujut" error={errors.locationName?.message} {...register('locationName')} />
-          </div>
-
-          <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1">{t.destinations.latitude} *</label>
-            <Input type="number" step="any" placeholder="-8.9056" error={errors.latitude?.message} {...register('latitude')} />
-          </div>
-
-          <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1">{t.destinations.longitude} *</label>
-            <Input type="number" step="any" placeholder="116.3211" error={errors.longitude?.message} {...register('longitude')} />
-          </div>
+        {/* Location Name */}
+        <div>
+          <label className="block text-xs font-semibold text-slate-700 mb-1">{t.destinations.locationName} *</label>
+          <Input placeholder="cth: Sengkol, Pujut" error={errors.locationName?.message} {...register('locationName')} />
         </div>
+
+        {/* Interactive Mapbox Location Picker */}
+        <LocationMapPicker
+          latitude={watch('latitude')}
+          longitude={watch('longitude')}
+          onLocationChange={(lat, lng) => {
+            setValue('latitude', lat, { shouldValidate: true, shouldDirty: true });
+            setValue('longitude', lng, { shouldValidate: true, shouldDirty: true });
+          }}
+          errors={{
+            latitude: errors.latitude?.message,
+            longitude: errors.longitude?.message,
+          }}
+        />
 
         {/* Ticket Price & Operational Info */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">

@@ -13,6 +13,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Accommodation } from '@/types/accommodation.types';
 import { REGIONS } from '@/types/common.types';
 import { ImageUploader } from '@/components/common/ImageUploader';
+import { LocationMapPicker } from '@/components/common/LocationMapPicker';
 import { CloudinaryAsset } from '@/types/upload.types';
 import { SupportedLocale } from '@/lib/constants/locales';
 import { TranslationCompleteness, calculateTranslationStatus } from '@/types/localization.types';
@@ -44,6 +45,7 @@ export function AccommodationFormModal({
     handleSubmit,
     reset,
     watch,
+    setValue,
     setError,
     formState: { errors, isDirty },
   } = useForm<AccommodationFormData>({
@@ -315,18 +317,19 @@ export function AccommodationFormModal({
           <Input placeholder="Jl. Raya Mangsit, Senggigi, Lombok Barat" error={errors.address?.message} {...register('address')} />
         </div>
 
-        {/* Location Coordinates */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1">{t.destinations.latitude} *</label>
-            <Input type="number" step="any" placeholder="-8.4912" error={errors.latitude?.message} {...register('latitude')} />
-          </div>
-
-          <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1">{t.destinations.longitude} *</label>
-            <Input type="number" step="any" placeholder="116.0398" error={errors.longitude?.message} {...register('longitude')} />
-          </div>
-        </div>
+        {/* Interactive Mapbox Location Picker */}
+        <LocationMapPicker
+          latitude={watch('latitude')}
+          longitude={watch('longitude')}
+          onLocationChange={(lat, lng) => {
+            setValue('latitude', lat, { shouldValidate: true, shouldDirty: true });
+            setValue('longitude', lng, { shouldValidate: true, shouldDirty: true });
+          }}
+          errors={{
+            latitude: errors.latitude?.message,
+            longitude: errors.longitude?.message,
+          }}
+        />
 
         {/* Contact & Website */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
