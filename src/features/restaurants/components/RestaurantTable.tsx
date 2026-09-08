@@ -24,15 +24,17 @@ import {
   UtensilsCrossed,
   CheckCircle2,
   ArrowUpDown,
+  Image as ImageIcon,
 } from 'lucide-react';
 
 interface RestaurantTableProps {
   onAdd: () => void;
   onView: (rest: Restaurant) => void;
   onEdit: (rest: Restaurant) => void;
+  onManageGallery?: (rest: Restaurant) => void;
 }
 
-export function RestaurantTable({ onAdd, onView, onEdit }: RestaurantTableProps) {
+export function RestaurantTable({ onAdd, onView, onEdit, onManageGallery }: RestaurantTableProps) {
   const queryClient = useQueryClient();
 
   const [filters, setFilters] = useState<RestaurantFilters>({
@@ -276,6 +278,17 @@ export function RestaurantTable({ onAdd, onView, onEdit }: RestaurantTableProps)
                       >
                         <Eye className="h-3.5 w-3.5" />
                       </Button>
+                      {onManageGallery && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => onManageGallery(rest)}
+                          className="h-8 w-8 p-0 text-slate-500 hover:text-amber-600"
+                          title="Kelola Galeri Foto"
+                        >
+                          <ImageIcon className="h-3.5 w-3.5" />
+                        </Button>
+                      )}
                       <Button
                         variant="ghost"
                         size="sm"

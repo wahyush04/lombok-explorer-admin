@@ -129,7 +129,14 @@ export function AccommodationFormModal({
             }
           : null,
         coverImageUrl: accommodationToEdit.coverImageUrl,
-        images: accommodationToEdit.images || [],
+        images: (accommodationToEdit.images || []).map((imgUrl, idx) => ({
+          publicId: `existing_img_${idx}`,
+          secureUrl: typeof imgUrl === 'string' ? imgUrl : (imgUrl as any)?.secureUrl || (imgUrl as any)?.imageUrl,
+          imageUrl: typeof imgUrl === 'string' ? imgUrl : (imgUrl as any)?.secureUrl || (imgUrl as any)?.imageUrl,
+          resourceType: 'image',
+          orderIndex: idx,
+          isPrimary: false,
+        })),
         facilities: accommodationToEdit.facilities || [],
         amenities: accommodationToEdit.amenities || [],
         contactPhone: accommodationToEdit.contactPhone || '',
@@ -334,24 +341,44 @@ export function AccommodationFormModal({
           </div>
         </div>
 
-        {/* Shared Cover Image */}
-        <div>
-          <label className="block text-xs font-semibold text-slate-700 mb-1.5">{t.accommodations.coverImage}</label>
-          <ImageUploader
-            resourceType="ACCOMMODATION"
-            multiple={false}
-            maxFiles={1}
-            value={watch('coverImage') as CloudinaryAsset | null}
-            onChange={(asset) => {
-              const primary = Array.isArray(asset) ? asset[0] : asset;
-              reset((prev) => ({
-                ...prev,
-                coverImage: primary || null,
-                coverImageUrl: primary ? primary.secureUrl : '',
-              }));
-            }}
-            onUploadingChange={setIsUploading}
-          />
+        {/* Shared Media & Uploads (Cover Image & Gallery) */}
+        <div className="space-y-4 pt-2 border-t border-slate-100">
+          <div>
+            <label className="block text-xs font-semibold text-slate-700 mb-1.5">{t.accommodations.coverImage}</label>
+            <ImageUploader
+              resourceType="ACCOMMODATION"
+              multiple={false}
+              maxFiles={1}
+              value={watch('coverImage') as CloudinaryAsset | null}
+              onChange={(asset) => {
+                const primary = Array.isArray(asset) ? asset[0] : asset;
+                reset((prev) => ({
+                  ...prev,
+                  coverImage: primary || null,
+                  coverImageUrl: primary ? primary.secureUrl : '',
+                }));
+              }}
+              onUploadingChange={setIsUploading}
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs font-semibold text-slate-700 mb-1.5">{t.accommodations.gallery}</label>
+            <ImageUploader
+              resourceType="ACCOMMODATION_IMAGE"
+              multiple={true}
+              maxFiles={8}
+              value={(watch('images') as CloudinaryAsset[]) || []}
+              onChange={(assets) => {
+                const list = Array.isArray(assets) ? assets : assets ? [assets] : [];
+                reset((prev) => ({
+                  ...prev,
+                  images: list,
+                }));
+              }}
+              onUploadingChange={setIsUploading}
+            />
+          </div>
         </div>
 
         {/* Status */}

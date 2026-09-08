@@ -95,6 +95,67 @@ export interface UpdateRestaurantRequest {
 export type Restaurant = AdminRestaurantDto;
 export type RestaurantStatus = DestinationStatus;
 
+export interface RestaurantImageDto {
+  id: string;
+  restaurantId: string;
+  imageUrl: string;
+  imagePublicId?: string | null;
+  caption?: string | null;
+  altText?: string | null;
+  orderIndex: number;
+  isPrimary: boolean;
+  width?: number | null;
+  height?: number | null;
+  format?: string | null;
+  bytes?: number | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface RestaurantImageListResponse {
+  success: boolean;
+  message: string;
+  data: RestaurantImageDto[];
+}
+
+export interface RestaurantImageDetailResponse {
+  success: boolean;
+  message: string;
+  data: RestaurantImageDto;
+}
+
+export interface CreateRestaurantImageRequest {
+  image?: CloudinaryAsset | string;
+  publicId?: string;
+  secureUrl?: string;
+  imageUrl?: string;
+  width?: number;
+  height?: number;
+  format?: string;
+  caption?: string;
+  altText?: string;
+  orderIndex?: number;
+  isPrimary?: boolean;
+}
+
+export interface UpdateRestaurantImageRequest {
+  image?: CloudinaryAsset | string;
+  publicId?: string;
+  secureUrl?: string;
+  imageUrl?: string;
+  width?: number;
+  height?: number;
+  format?: string;
+  caption?: string;
+  altText?: string;
+  orderIndex?: number;
+  isPrimary?: boolean;
+}
+
+export type RestaurantImage = RestaurantImageDto;
+export type CreateRestaurantImageDto = CreateRestaurantImageRequest;
+export type UpdateRestaurantImageDto = UpdateRestaurantImageRequest;
+
 export interface RestaurantFilters {
   page?: number;
   limit?: number;
@@ -110,4 +171,5 @@ export interface RestaurantFilters {
 
 export type CreateRestaurantDto = CreateRestaurantRequest;
 export type UpdateRestaurantDto = UpdateRestaurantRequest;
+
 

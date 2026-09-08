@@ -6,6 +6,8 @@ import {
   CreateAccommodationDto,
   UpdateAccommodationDto,
   AccommodationStatus,
+  AccommodationImage,
+  CreateAccommodationImageRequest,
 } from '@/types/accommodation.types';
 
 export const accommodationApi = {
@@ -31,5 +33,29 @@ export const accommodationApi = {
 
   updateAccommodationStatus: async (id: string, status: AccommodationStatus): Promise<ApiResponse<Accommodation>> => {
     return apiClient.patch<ApiResponse<Accommodation>>(`/accommodations/${id}/status`, { status });
+  },
+
+  // Gallery Images
+  getAccommodationImages: async (accommodationId: string): Promise<ApiResponse<AccommodationImage[]>> => {
+    return apiClient.get<ApiResponse<AccommodationImage[]>>(`/accommodations/${accommodationId}/images`);
+  },
+
+  createAccommodationImage: async (
+    accommodationId: string,
+    data: CreateAccommodationImageRequest
+  ): Promise<ApiResponse<AccommodationImage>> => {
+    return apiClient.post<ApiResponse<AccommodationImage>>(`/accommodations/${accommodationId}/images`, data);
+  },
+
+  updateAccommodationImage: async (
+    accommodationId: string,
+    imageId: string,
+    data: Partial<AccommodationImage>
+  ): Promise<ApiResponse<AccommodationImage>> => {
+    return apiClient.put<ApiResponse<AccommodationImage>>(`/accommodations/${accommodationId}/images/${imageId}`, data);
+  },
+
+  deleteAccommodationImage: async (accommodationId: string, imageId: string): Promise<ApiResponse<null>> => {
+    return apiClient.delete<ApiResponse<null>>(`/accommodations/${accommodationId}/images/${imageId}`);
   },
 };

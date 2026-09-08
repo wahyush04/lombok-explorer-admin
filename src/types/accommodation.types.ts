@@ -92,6 +92,68 @@ export interface UpdateAccommodationRequest {
 
 export type Accommodation = AdminAccommodationDto;
 export type AccommodationStatus = DestinationStatus;
+
+export interface AccommodationImageDto {
+  id: string;
+  accommodationId: string;
+  imageUrl: string;
+  imagePublicId?: string | null;
+  caption?: string | null;
+  altText?: string | null;
+  orderIndex: number;
+  isPrimary: boolean;
+  width?: number | null;
+  height?: number | null;
+  format?: string | null;
+  bytes?: number | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface AccommodationImageListResponse {
+  success: boolean;
+  message: string;
+  data: AccommodationImageDto[];
+}
+
+export interface AccommodationImageDetailResponse {
+  success: boolean;
+  message: string;
+  data: AccommodationImageDto;
+}
+
+export interface CreateAccommodationImageRequest {
+  image?: CloudinaryAsset | string;
+  publicId?: string;
+  secureUrl?: string;
+  imageUrl?: string;
+  width?: number;
+  height?: number;
+  format?: string;
+  caption?: string;
+  altText?: string;
+  orderIndex?: number;
+  isPrimary?: boolean;
+}
+
+export interface UpdateAccommodationImageRequest {
+  image?: CloudinaryAsset | string;
+  publicId?: string;
+  secureUrl?: string;
+  imageUrl?: string;
+  width?: number;
+  height?: number;
+  format?: string;
+  caption?: string;
+  altText?: string;
+  orderIndex?: number;
+  isPrimary?: boolean;
+}
+
+export type AccommodationImage = AccommodationImageDto;
+export type CreateAccommodationImageDto = CreateAccommodationImageRequest;
+export type UpdateAccommodationImageDto = UpdateAccommodationImageRequest;
+
 export type CreateAccommodationDto = CreateAccommodationRequest;
 export type UpdateAccommodationDto = UpdateAccommodationRequest;
 
@@ -105,4 +167,5 @@ export interface AccommodationFilters {
   sortBy?: string;
   order?: 'asc' | 'desc';
 }
+
 

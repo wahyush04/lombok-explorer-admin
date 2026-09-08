@@ -23,15 +23,17 @@ import {
   Star,
   Hotel,
   ArrowUpDown,
+  Image as ImageIcon,
 } from 'lucide-react';
 
 interface AccommodationTableProps {
   onAdd: () => void;
   onView: (acc: Accommodation) => void;
   onEdit: (acc: Accommodation) => void;
+  onManageGallery?: (acc: Accommodation) => void;
 }
 
-export function AccommodationTable({ onAdd, onView, onEdit }: AccommodationTableProps) {
+export function AccommodationTable({ onAdd, onView, onEdit, onManageGallery }: AccommodationTableProps) {
   const queryClient = useQueryClient();
 
   const [filters, setFilters] = useState<AccommodationFilters>({
@@ -282,6 +284,17 @@ export function AccommodationTable({ onAdd, onView, onEdit }: AccommodationTable
                       >
                         <Eye className="h-3.5 w-3.5" />
                       </Button>
+                      {onManageGallery && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => onManageGallery(acc)}
+                          className="h-8 w-8 p-0 text-slate-500 hover:text-indigo-600"
+                          title="Kelola Galeri Foto"
+                        >
+                          <ImageIcon className="h-3.5 w-3.5" />
+                        </Button>
+                      )}
                       <Button
                         variant="ghost"
                         size="sm"

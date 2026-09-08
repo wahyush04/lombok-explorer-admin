@@ -118,19 +118,23 @@ async function runAllTests() {
     'DESTINATION_IMAGE',
     'CATEGORY',
     'RESTAURANT',
+    'RESTAURANT_IMAGE',
     'ACCOMMODATION',
+    'ACCOMMODATION_IMAGE',
     'ITINERARY_TEMPLATE',
     'USER_AVATAR',
     'REVIEW',
     'FEED',
   ];
 
-  assert(validResourceTypes.length === 9, 'All 9 backend resource types supported');
+  assert(validResourceTypes.length === 11, 'All 11 backend resource types supported');
   assert(validResourceTypes.includes('DESTINATION'), 'DESTINATION is valid');
   assert(validResourceTypes.includes('DESTINATION_IMAGE'), 'DESTINATION_IMAGE is valid');
   assert(validResourceTypes.includes('CATEGORY'), 'CATEGORY is valid');
   assert(validResourceTypes.includes('RESTAURANT'), 'RESTAURANT is valid');
+  assert(validResourceTypes.includes('RESTAURANT_IMAGE'), 'RESTAURANT_IMAGE is valid');
   assert(validResourceTypes.includes('ACCOMMODATION'), 'ACCOMMODATION is valid');
+  assert(validResourceTypes.includes('ACCOMMODATION_IMAGE'), 'ACCOMMODATION_IMAGE is valid');
   assert(validResourceTypes.includes('ITINERARY_TEMPLATE'), 'ITINERARY_TEMPLATE is valid');
 
   // -------------------------------------------------------------

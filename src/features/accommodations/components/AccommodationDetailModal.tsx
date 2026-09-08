@@ -6,13 +6,14 @@ import { Badge } from '@/components/ui/badge';
 import { formatCurrency, formatDateTime } from '@/lib/utils/format';
 import { Accommodation } from '@/types/accommodation.types';
 import { TranslationsDetailSection } from '@/components/localization/TranslationsDetailSection';
-import { MapPin, Star, Building2, Phone, Globe, Edit2, CheckCircle2 } from 'lucide-react';
+import { MapPin, Star, Building2, Phone, Globe, Edit2, CheckCircle2, Image as ImageIcon } from 'lucide-react';
 
 interface AccommodationDetailModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   accommodation: Accommodation | null;
   onEdit: (acc: Accommodation) => void;
+  onManageGallery?: (acc: Accommodation) => void;
 }
 
 export function AccommodationDetailModal({
@@ -20,6 +21,7 @@ export function AccommodationDetailModal({
   onOpenChange,
   accommodation,
   onEdit,
+  onManageGallery,
 }: AccommodationDetailModalProps) {
   if (!accommodation) return null;
 
@@ -137,27 +139,79 @@ export function AccommodationDetailModal({
           )}
         </div>
 
+        {/* Gallery Photos Preview */}
+        {accommodation.images && accommodation.images.length > 0 && (
+          <div>
+            <div className="flex items-center justify-between mb-1.5">
+              <span className="text-xs font-bold text-slate-800 uppercase tracking-wider">
+                Galeri Foto ({accommodation.images.length})
+              </span>
+              {onManageGallery && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    onOpenChange(false);
+                    onManageGallery(accommodation);
+                  }}
+                  className="text-xs text-indigo-600 hover:text-indigo-700 font-medium cursor-pointer"
+                >
+                  Kelola Galeri
+                </button>
+              )}
+            </div>
+            <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
+              {accommodation.images.map((imgUrl, idx) => (
+                <div key={idx} className="h-20 rounded-lg overflow-hidden border border-slate-200 bg-slate-100">
+                  <img
+                    src={typeof imgUrl === 'string' ? imgUrl : (imgUrl as any)?.secureUrl || (imgUrl as any)?.imageUrl}
+                    alt={`Foto ${accommodation.name} ${idx + 1}`}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         <div className="text-[11px] text-slate-400 pt-2 border-t border-slate-100 flex justify-between">
           <span>Dibuat: {formatDateTime(accommodation.createdAt)}</span>
           <span>Diperbarui: {formatDateTime(accommodation.updatedAt)}</span>
         </div>
       </div>
 
-      <DialogFooter>
-        <Button
-          size="sm"
-          onClick={() => {
-            onOpenChange(false);
-            onEdit(accommodation);
-          }}
-          className="text-xs"
-        >
-          <Edit2 className="h-3.5 w-3.5 mr-1.5" />
-          Edit Data
-        </Button>
-        <Button variant="secondary" size="sm" onClick={() => onOpenChange(false)} className="text-xs">
-          Tutup
-        </Button>
+      <DialogFooter className="flex items-center justify-between sm:justify-between w-full">
+        {onManageGallery ? (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              onOpenChange(false);
+              onManageGallery(accommodation);
+            }}
+            className="text-xs"
+          >
+            <ImageIcon className="h-3.5 w-3.5 mr-1.5" />
+            Kelola Galeri Foto
+          </Button>
+        ) : (
+          <div />
+        )}
+        <div className="flex items-center space-x-2">
+          <Button
+            size="sm"
+            onClick={() => {
+              onOpenChange(false);
+              onEdit(accommodation);
+            }}
+            className="text-xs"
+          >
+            <Edit2 className="h-3.5 w-3.5 mr-1.5" />
+            Edit Data
+          </Button>
+          <Button variant="secondary" size="sm" onClick={() => onOpenChange(false)} className="text-xs">
+            Tutup
+          </Button>
+        </div>
       </DialogFooter>
     </Dialog>
   );

@@ -25,12 +25,14 @@ import { Category } from '@/types/category.types';
 import { RestaurantTable } from '@/features/restaurants/components/RestaurantTable';
 import { RestaurantFormModal } from '@/features/restaurants/components/RestaurantFormModal';
 import { RestaurantDetailModal } from '@/features/restaurants/components/RestaurantDetailModal';
+import { RestaurantGalleryModal } from '@/features/restaurants/components/RestaurantGalleryModal';
 import { Restaurant } from '@/types/restaurant.types';
 
 // Accommodations
 import { AccommodationTable } from '@/features/accommodations/components/AccommodationTable';
 import { AccommodationFormModal } from '@/features/accommodations/components/AccommodationFormModal';
 import { AccommodationDetailModal } from '@/features/accommodations/components/AccommodationDetailModal';
+import { AccommodationGalleryModal } from '@/features/accommodations/components/AccommodationGalleryModal';
 import { Accommodation } from '@/types/accommodation.types';
 
 // Users
@@ -121,12 +123,14 @@ export function AppContent() {
   const [restToEdit, setRestToEdit] = useState<Restaurant | null>(null);
   const [restDetailOpen, setRestDetailOpen] = useState(false);
   const [restSelected, setRestSelected] = useState<Restaurant | null>(null);
+  const [restGalleryOpen, setRestGalleryOpen] = useState(false);
 
   // Accommodations Modals State
   const [accFormOpen, setAccFormOpen] = useState(false);
   const [accToEdit, setAccToEdit] = useState<Accommodation | null>(null);
   const [accDetailOpen, setAccDetailOpen] = useState(false);
   const [accSelected, setAccSelected] = useState<Accommodation | null>(null);
+  const [accGalleryOpen, setAccGalleryOpen] = useState(false);
 
   // Itineraries Modals State
   const [itnFormOpen, setItnFormOpen] = useState(false);
@@ -219,6 +223,10 @@ export function AppContent() {
                 setRestToEdit(rest);
                 setRestFormOpen(true);
               }}
+              onManageGallery={(rest) => {
+                setRestSelected(rest);
+                setRestGalleryOpen(true);
+              }}
             />
           </div>
         );
@@ -242,6 +250,10 @@ export function AppContent() {
               onEdit={(acc) => {
                 setAccToEdit(acc);
                 setAccFormOpen(true);
+              }}
+              onManageGallery={(acc) => {
+                setAccSelected(acc);
+                setAccGalleryOpen(true);
               }}
             />
           </div>
@@ -381,6 +393,15 @@ export function AppContent() {
           setRestToEdit(rest);
           setRestFormOpen(true);
         }}
+        onManageGallery={(rest) => {
+          setRestSelected(rest);
+          setRestGalleryOpen(true);
+        }}
+      />
+      <RestaurantGalleryModal
+        open={restGalleryOpen}
+        onOpenChange={setRestGalleryOpen}
+        restaurant={restSelected}
       />
 
       {/* Accommodation Modals */}
@@ -398,6 +419,15 @@ export function AppContent() {
           setAccToEdit(acc);
           setAccFormOpen(true);
         }}
+        onManageGallery={(acc) => {
+          setAccSelected(acc);
+          setAccGalleryOpen(true);
+        }}
+      />
+      <AccommodationGalleryModal
+        open={accGalleryOpen}
+        onOpenChange={setAccGalleryOpen}
+        accommodation={accSelected}
       />
 
       {/* Itinerary Modals */}

@@ -6,6 +6,8 @@ import {
   CreateRestaurantDto,
   UpdateRestaurantDto,
   RestaurantStatus,
+  RestaurantImage,
+  CreateRestaurantImageRequest,
 } from '@/types/restaurant.types';
 
 export const restaurantApi = {
@@ -31,5 +33,29 @@ export const restaurantApi = {
 
   updateRestaurantStatus: async (id: string, status: RestaurantStatus): Promise<ApiResponse<Restaurant>> => {
     return apiClient.patch<ApiResponse<Restaurant>>(`/restaurants/${id}/status`, { status });
+  },
+
+  // Gallery Images
+  getRestaurantImages: async (restaurantId: string): Promise<ApiResponse<RestaurantImage[]>> => {
+    return apiClient.get<ApiResponse<RestaurantImage[]>>(`/restaurants/${restaurantId}/images`);
+  },
+
+  createRestaurantImage: async (
+    restaurantId: string,
+    data: CreateRestaurantImageRequest
+  ): Promise<ApiResponse<RestaurantImage>> => {
+    return apiClient.post<ApiResponse<RestaurantImage>>(`/restaurants/${restaurantId}/images`, data);
+  },
+
+  updateRestaurantImage: async (
+    restaurantId: string,
+    imageId: string,
+    data: Partial<RestaurantImage>
+  ): Promise<ApiResponse<RestaurantImage>> => {
+    return apiClient.put<ApiResponse<RestaurantImage>>(`/restaurants/${restaurantId}/images/${imageId}`, data);
+  },
+
+  deleteRestaurantImage: async (restaurantId: string, imageId: string): Promise<ApiResponse<null>> => {
+    return apiClient.delete<ApiResponse<null>>(`/restaurants/${restaurantId}/images/${imageId}`);
   },
 };
