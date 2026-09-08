@@ -5,6 +5,7 @@ import { StatusBadge } from '@/components/common/StatusBadge';
 import { Badge } from '@/components/ui/badge';
 import { formatCurrency, formatDateTime } from '@/lib/utils/format';
 import { Restaurant } from '@/types/restaurant.types';
+import { TranslationsDetailSection } from '@/components/localization/TranslationsDetailSection';
 import { MapPin, Star, Utensils, CheckCircle2, Edit2 } from 'lucide-react';
 
 interface RestaurantDetailModalProps {
@@ -99,6 +100,16 @@ export function RestaurantDetailModal({
             {restaurant.description}
           </p>
         </div>
+
+        {/* Multilingual Content Translations Section */}
+        <TranslationsDetailSection
+          translations={restaurant.translations}
+          availableLocales={restaurant.availableLocales}
+          missingLocales={restaurant.missingLocales}
+          canonicalName={restaurant.name}
+          canonicalDescription={restaurant.description}
+          canonicalAddress={restaurant.address}
+        />
 
         {/* Address & Coordinates */}
         <div className="p-3 rounded-lg bg-slate-50 border border-slate-100 text-xs space-y-1">

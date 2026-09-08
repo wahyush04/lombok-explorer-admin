@@ -5,6 +5,7 @@ import { StatusBadge } from '@/components/common/StatusBadge';
 import { Badge } from '@/components/ui/badge';
 import { formatCurrency, formatDateTime } from '@/lib/utils/format';
 import { Accommodation } from '@/types/accommodation.types';
+import { TranslationsDetailSection } from '@/components/localization/TranslationsDetailSection';
 import { MapPin, Star, Building2, Phone, Globe, Edit2, CheckCircle2 } from 'lucide-react';
 
 interface AccommodationDetailModalProps {
@@ -81,6 +82,16 @@ export function AccommodationDetailModal({
             {accommodation.description}
           </p>
         </div>
+
+        {/* Multilingual Content Translations Section */}
+        <TranslationsDetailSection
+          translations={accommodation.translations}
+          availableLocales={accommodation.availableLocales}
+          missingLocales={accommodation.missingLocales}
+          canonicalName={accommodation.name}
+          canonicalDescription={accommodation.description}
+          canonicalAddress={accommodation.address}
+        />
 
         {/* Facilities */}
         {accommodation.facilities && accommodation.facilities.length > 0 && (

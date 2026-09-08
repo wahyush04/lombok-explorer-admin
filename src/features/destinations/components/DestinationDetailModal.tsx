@@ -5,6 +5,7 @@ import { StatusBadge } from '@/components/common/StatusBadge';
 import { Badge } from '@/components/ui/badge';
 import { formatCurrency, formatDateTime } from '@/lib/utils/format';
 import { Destination } from '@/types/destination.types';
+import { TranslationsDetailSection } from '@/components/localization/TranslationsDetailSection';
 import {
   MapPin,
   Clock,
@@ -117,6 +118,17 @@ export function DestinationDetailModal({
             {destination.description || 'Tidak ada deskripsi rinci.'}
           </p>
         </div>
+
+        {/* Multilingual Content Translations Section */}
+        <TranslationsDetailSection
+          translations={destination.translations}
+          availableLocales={destination.availableLocales}
+          missingLocales={destination.missingLocales}
+          canonicalName={destination.name}
+          canonicalDescription={destination.description}
+          canonicalShortDescription={destination.shortDescription}
+          canonicalAddress={destination.address || undefined}
+        />
 
         {/* Location & Coordinates */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">

@@ -1,6 +1,7 @@
 import { PaginationMeta } from './auth.types';
 import { DestinationStatus } from './destination.types';
 import { CloudinaryAsset } from './upload.types';
+import { CategoryTranslationDto } from './localization.types';
 
 export interface AdminCategoryDto {
   id: string;
@@ -11,6 +12,9 @@ export interface AdminCategoryDto {
   coverImageUrl?: string;
   destinationsCount?: number;
   status?: DestinationStatus;
+  translations?: CategoryTranslationDto[];
+  availableLocales?: string[];
+  missingLocales?: string[];
   createdAt: string;
   updatedAt: string;
 }
@@ -35,6 +39,7 @@ export interface CreateCategoryRequest {
   iconName: string;
   coverImage?: CloudinaryAsset | string;
   coverImageUrl?: string;
+  translations?: CategoryTranslationDto[];
 }
 
 export interface UpdateCategoryRequest {
@@ -44,6 +49,7 @@ export interface UpdateCategoryRequest {
   iconName?: string;
   coverImage?: CloudinaryAsset | string;
   coverImageUrl?: string;
+  translations?: CategoryTranslationDto[];
 }
 
 export type Category = AdminCategoryDto;

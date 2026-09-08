@@ -13,7 +13,8 @@ import { ErrorState } from '@/components/common/ErrorState';
 import { ConfirmDialog } from '@/components/common/ConfirmDialog';
 import { Dialog, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Plus, Edit2, Trash2, Waves, Mountain, Landmark, Droplets, Sun, Compass, FolderTree } from 'lucide-react';
+import { Plus, Eye, Edit2, Trash2, Waves, Mountain, Landmark, Droplets, Sun, Compass, FolderTree } from 'lucide-react';
+import { CategoryDetailModal } from './CategoryDetailModal';
 
 interface CategoryTableProps {
   onAdd: () => void;
@@ -29,6 +30,7 @@ export function CategoryTable({ onAdd, onEdit }: CategoryTableProps) {
   const [categoryToDelete, setCategoryToDelete] = useState<Category | null>(null);
   const [reassignTargetId, setReassignTargetId] = useState<string>('');
   const [deleteErrorMessage, setDeleteErrorMessage] = useState<string | null>(null);
+  const [categoryToView, setCategoryToView] = useState<Category | null>(null);
 
   const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ['categories', { search, page }],
@@ -152,6 +154,13 @@ export function CategoryTable({ onAdd, onEdit }: CategoryTableProps) {
                         <span className="text-[11px] text-slate-500 line-clamp-1">
                           {cat.description}
                         </span>
+                        {/* Missing translation indicator */}
+                        {(cat.missingLocales?.includes('en-US') ||
+                          (Array.isArray(cat.translations) && !cat.translations.some((t) => t.locale === 'en-US'))) && (
+                          <span className="text-[10px] text-amber-600 block mt-0.5">
+                            • English missing
+                          </span>
+                        )}
                       </div>
                     </div>
                   </TableCell>
@@ -168,6 +177,15 @@ export function CategoryTable({ onAdd, onEdit }: CategoryTableProps) {
                   </TableCell>
                   <TableCell className="text-right">
                     <div className="flex items-center justify-end space-x-1">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setCategoryToView(cat)}
+                        className="h-8 w-8 p-0 text-slate-500 hover:text-emerald-700"
+                        title="Lihat Detail & Terjemahan"
+                      >
+                        <Eye className="h-3.5 w-3.5" />
+                      </Button>
                       <Button
                         variant="ghost"
                         size="sm"
@@ -268,6 +286,19 @@ export function CategoryTable({ onAdd, onEdit }: CategoryTableProps) {
           </DialogFooter>
         </Dialog>
       )}
+
+      {/* Detail & Translations Modal */}
+      <CategoryDetailModal
+        open={Boolean(categoryToView)}
+        onOpenChange={(open) => {
+          if (!open) setCategoryToView(null);
+        }}
+        category={categoryToView}
+        onEdit={(cat) => {
+          setCategoryToView(null);
+          onEdit(cat);
+        }}
+      />
     </div>
   );
 }

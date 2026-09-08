@@ -1,5 +1,6 @@
 import { PaginationMeta, Region } from './auth.types';
 import { CloudinaryAsset } from './upload.types';
+import { DestinationTranslationDto } from './localization.types';
 
 export type DestinationStatus = 'PUBLISHED' | 'DRAFT' | 'ARCHIVED';
 export type DestinationDifficulty = 'EASY' | 'MODERATE' | 'CHALLENGING' | 'EXTREME';
@@ -44,6 +45,9 @@ export interface AdminDestinationDto {
   reviewsCount?: number;
   favoritesCount?: number;
   deletedAt?: string | null;
+  translations?: DestinationTranslationDto[];
+  availableLocales?: string[];
+  missingLocales?: string[];
   createdAt: string;
   updatedAt: string;
 }
@@ -87,6 +91,7 @@ export interface CreateDestinationRequest {
   tips?: string[];
   status?: DestinationStatus;
   isFeatured?: boolean;
+  translations?: DestinationTranslationDto[];
 }
 
 export interface UpdateDestinationRequest {
@@ -115,6 +120,7 @@ export interface UpdateDestinationRequest {
   tips?: string[];
   status?: DestinationStatus;
   isFeatured?: boolean;
+  translations?: DestinationTranslationDto[];
 }
 
 export interface BulkDeleteDestinationsRequest {

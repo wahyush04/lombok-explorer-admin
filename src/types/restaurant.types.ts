@@ -1,6 +1,7 @@
 import { PaginationMeta, Region } from './auth.types';
 import { DestinationStatus } from './destination.types';
 import { CloudinaryAsset } from './upload.types';
+import { RestaurantTranslationDto } from './localization.types';
 
 export interface AdminRestaurantDto {
   id: string;
@@ -24,6 +25,9 @@ export interface AdminRestaurantDto {
   isHalalCertified: boolean;
   status: DestinationStatus;
   isFeatured: boolean;
+  translations?: RestaurantTranslationDto[];
+  availableLocales?: string[];
+  missingLocales?: string[];
   createdAt: string;
   updatedAt: string;
   deletedAt?: string | null;
@@ -62,6 +66,7 @@ export interface CreateRestaurantRequest {
   isHalalCertified?: boolean;
   status?: DestinationStatus;
   isFeatured?: boolean;
+  translations?: RestaurantTranslationDto[];
 }
 
 export interface UpdateRestaurantRequest {
@@ -84,6 +89,7 @@ export interface UpdateRestaurantRequest {
   isHalalCertified?: boolean;
   status?: DestinationStatus;
   isFeatured?: boolean;
+  translations?: RestaurantTranslationDto[];
 }
 
 export type Restaurant = AdminRestaurantDto;

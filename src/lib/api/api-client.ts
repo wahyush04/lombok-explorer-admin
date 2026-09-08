@@ -1,5 +1,6 @@
 import axios, { AxiosError, AxiosInstance, InternalAxiosRequestConfig } from 'axios';
 import { tokenStorage } from '@/lib/auth/token-storage';
+import { useLocaleStore } from '@/stores/locale.store';
 import { normalizeApiError } from './api-error';
 
 const DEFAULT_API_BASE_URL = 'http://34.142.205.101:3000/api/v1/admin';
@@ -35,13 +36,24 @@ const axiosInstance: AxiosInstance = axios.create({
   },
 });
 
-// Request interceptor: inject JWT Bearer Token
+// Request interceptor: inject JWT Bearer Token and Accept-Language header
 axiosInstance.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
     const token = tokenStorage.getAccessToken();
     if (token && config.headers) {
       config.headers.Authorization = `Bearer ${token}`;
     }
+
+    // Attach Accept-Language if not explicitly set (primarily for localized system/error messages)
+    if (config.headers && !config.headers['Accept-Language']) {
+      try {
+        const activeLocale = useLocaleStore.getState().uiLocale;
+        config.headers['Accept-Language'] = activeLocale || 'id-ID';
+      } catch {
+        config.headers['Accept-Language'] = 'id-ID';
+      }
+    }
+
     return config;
   },
   (error) => Promise.reject(normalizeApiError(error))
@@ -104,9 +116,17 @@ axiosInstance.interceptors.response.use(
       }
 
       try {
-        const refreshResponse = await axios.post(`${API_BASE_URL}/auth/refresh`, {
-          refreshToken: currentRefreshToken,
-        });
+        const refreshResponse = await axios.post(
+          `${API_BASE_URL}/auth/refresh`,
+          {
+            refreshToken: currentRefreshToken,
+          },
+          {
+            headers: {
+              'Accept-Language': useLocaleStore.getState().uiLocale || 'id-ID',
+            },
+          }
+        );
 
         const authData = refreshResponse.data?.data;
         if (authData?.accessToken) {

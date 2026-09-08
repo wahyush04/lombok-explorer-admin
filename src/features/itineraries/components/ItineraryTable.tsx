@@ -174,6 +174,12 @@ export function ItineraryTable({ onAdd, onView, onEdit }: ItineraryTableProps) {
                         <span className="text-[11px] text-slate-400 truncate block">
                           {itn.description}
                         </span>
+                        {(itn.missingLocales?.includes('en-US') ||
+                          (Array.isArray(itn.translations) && !itn.translations.some((t) => t.locale === 'en-US'))) && (
+                          <span className="text-[10px] text-amber-600 block mt-0.5">
+                            • English missing
+                          </span>
+                        )}
                       </div>
                     </div>
                   </TableCell>

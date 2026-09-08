@@ -1,5 +1,6 @@
 import { PaginationMeta } from './auth.types';
 import { CloudinaryAsset } from './upload.types';
+import { ItineraryTemplateTranslationDto } from './localization.types';
 
 export type ItineraryTravelStyle =
   | 'NATURE_ADVENTURE'
@@ -90,6 +91,9 @@ export interface AdminItineraryTemplateDto {
   isFeatured: boolean;
   sortOrder: number;
   days?: AdminTemplateDayInput[];
+  translations?: ItineraryTemplateTranslationDto[];
+  availableLocales?: string[];
+  missingLocales?: string[];
   createdAt: string;
   updatedAt: string;
   deletedAt?: string | null;
@@ -125,6 +129,7 @@ export interface CreateItineraryTemplateRequest {
   isFeatured?: boolean;
   sortOrder?: number;
   days?: AdminTemplateDayInput[];
+  translations?: ItineraryTemplateTranslationDto[];
 }
 
 export interface UpdateItineraryTemplateRequest {
@@ -144,4 +149,5 @@ export interface UpdateItineraryTemplateRequest {
   isFeatured?: boolean;
   sortOrder?: number;
   days?: AdminTemplateDayInput[];
+  translations?: ItineraryTemplateTranslationDto[];
 }

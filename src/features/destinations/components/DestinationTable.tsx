@@ -17,6 +17,7 @@ import { ErrorState } from '@/components/common/ErrorState';
 import { ConfirmDialog } from '@/components/common/ConfirmDialog';
 import { Skeleton } from '@/components/ui/skeleton';
 import { formatCurrency } from '@/lib/utils/format';
+import { useTranslation } from '@/lib/i18n/useTranslation';
 import {
   Plus,
   Eye,
@@ -43,6 +44,7 @@ export function DestinationTable({
   onEdit,
   onManageGallery,
 }: DestinationTableProps) {
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
 
   // Filters State
@@ -200,10 +202,10 @@ export function DestinationTable({
             }
             className="w-36 h-9 text-xs"
           >
-            <option value="">Semua Wilayah</option>
+            <option value="">{t.common.all} {t.destinations.region}</option>
             {REGIONS.map((r) => (
               <option key={r.value} value={r.value}>
-                {r.label}
+                {(t.regions as any)[r.value] || r.label}
               </option>
             ))}
           </Select>
@@ -220,16 +222,16 @@ export function DestinationTable({
             }
             className="w-32 h-9 text-xs"
           >
-            <option value="">Semua Status</option>
-            <option value="PUBLISHED">PUBLISHED</option>
-            <option value="DRAFT">DRAFT</option>
-            <option value="ARCHIVED">ARCHIVED</option>
+            <option value="">{t.common.all} {t.common.status}</option>
+            <option value="PUBLISHED">{t.statuses.PUBLISHED}</option>
+            <option value="DRAFT">{t.statuses.DRAFT}</option>
+            <option value="ARCHIVED">{t.statuses.ARCHIVED}</option>
           </Select>
 
           {/* Add Destination CTA */}
           <Button onClick={onAdd} size="sm" className="h-9 text-xs font-semibold">
             <Plus className="h-4 w-4 mr-1.5" />
-            Tambah Destinasi
+            {t.destinations.addNew}
           </Button>
         </div>
       </div>
@@ -239,7 +241,7 @@ export function DestinationTable({
         <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl flex items-center justify-between animate-in fade-in">
           <div className="flex items-center space-x-2 text-xs font-semibold text-emerald-900">
             <CheckSquare className="h-4 w-4 text-emerald-600" />
-            <span>{selectedIds.length} destinasi dipilih</span>
+            <span>{selectedIds.length} {t.common.total}</span>
           </div>
           <div className="flex items-center space-x-2">
             <Button
@@ -249,7 +251,7 @@ export function DestinationTable({
               isLoading={bulkStatusMutation.isPending}
               className="h-7 text-xs bg-white text-emerald-700 hover:bg-emerald-100"
             >
-              Set Publikasi
+              {t.statuses.PUBLISHED}
             </Button>
             <Button
               variant="outline"
@@ -258,7 +260,7 @@ export function DestinationTable({
               isLoading={bulkStatusMutation.isPending}
               className="h-7 text-xs bg-white text-amber-700 hover:bg-amber-100"
             >
-              Set Draft
+              {t.statuses.DRAFT}
             </Button>
             <Button
               variant="destructive"
@@ -266,7 +268,7 @@ export function DestinationTable({
               onClick={() => setShowBulkDeleteConfirm(true)}
               className="h-7 text-xs"
             >
-              Hapus Terpilih
+              {t.common.delete}
             </Button>
           </div>
         </div>
@@ -274,7 +276,7 @@ export function DestinationTable({
 
       {/* Content Table */}
       {isError ? (
-        <ErrorState message="Gagal mengambil data destinasi." onRetry={refetch} />
+        <ErrorState message={t.common.somethingWentWrong} onRetry={refetch} />
       ) : isLoading ? (
         <div className="space-y-2 p-4 bg-white rounded-xl border border-slate-200">
           {[1, 2, 3, 4, 5].map((i) => (
@@ -283,9 +285,9 @@ export function DestinationTable({
         </div>
       ) : destinations.length === 0 ? (
         <EmptyState
-          title="Tidak ada destinasi ditemukan"
-          description="Coba ubah kata kunci pencarian atau sesuaikan filter wilayah dan kategori."
-          actionText="Tambah Destinasi Baru"
+          title={t.common.noDataFound}
+          description={t.destinations.subtitle}
+          actionText={t.destinations.addNew}
           onAction={onAdd}
         />
       ) : (
@@ -297,7 +299,7 @@ export function DestinationTable({
                   <Checkbox
                     checked={isAllSelected}
                     onCheckedChange={handleSelectAll}
-                    aria-label="Pilih Semua"
+                    aria-label="Select All"
                   />
                 </TableHead>
                 <TableHead
@@ -305,18 +307,18 @@ export function DestinationTable({
                   className="cursor-pointer hover:text-slate-900 select-none"
                 >
                   <div className="flex items-center space-x-1">
-                    <span>Destinasi</span>
+                    <span>{t.destinations.name}</span>
                     <ArrowUpDown className="h-3 w-3 text-slate-400" />
                   </div>
                 </TableHead>
-                <TableHead>Kategori</TableHead>
-                <TableHead>Wilayah</TableHead>
+                <TableHead>{t.destinations.category}</TableHead>
+                <TableHead>{t.destinations.region}</TableHead>
                 <TableHead
                   onClick={() => handleSort('ticketPrice')}
                   className="cursor-pointer hover:text-slate-900 select-none"
                 >
                   <div className="flex items-center space-x-1">
-                    <span>Tiket Masuk</span>
+                    <span>{t.destinations.ticketPrice}</span>
                     <ArrowUpDown className="h-3 w-3 text-slate-400" />
                   </div>
                 </TableHead>
@@ -329,8 +331,8 @@ export function DestinationTable({
                     <ArrowUpDown className="h-3 w-3 text-slate-400" />
                   </div>
                 </TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="text-right">Aksi</TableHead>
+                <TableHead>{t.common.status}</TableHead>
+                <TableHead className="text-right">{t.common.actions}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -365,6 +367,13 @@ export function DestinationTable({
                           <span className="text-[11px] text-slate-400 truncate block">
                             {dst.locationName}
                           </span>
+                          {/* Preferred translation indicator */}
+                          {(dst.missingLocales?.includes('en-US') ||
+                            (Array.isArray(dst.translations) && !dst.translations.some((tr) => tr.locale === 'en-US'))) && (
+                            <span className="text-[10px] text-amber-600 block mt-0.5">
+                              • {t.localization.english} {t.localization.missing.toLowerCase()}
+                            </span>
+                          )}
                         </div>
                       </div>
                     </TableCell>
@@ -472,10 +481,10 @@ export function DestinationTable({
       <ConfirmDialog
         open={Boolean(deleteTarget)}
         onOpenChange={(open) => !open && setDeleteTarget(null)}
-        title="Hapus Destinasi Wisata?"
-        description={`Apakah Anda yakin ingin menghapus destinasi "${deleteTarget?.name}"? Tindakan ini dapat dipulihkan dari log sistem.`}
-        confirmText="Hapus Destinasi"
-        cancelText="Batal"
+        title={t.destinations.deleteConfirmTitle}
+        description={t.destinations.deleteConfirmDesc.replace('{name}', deleteTarget?.name || '')}
+        confirmText={t.common.delete}
+        cancelText={t.common.cancel}
         isDestructive
         isLoading={deleteMutation.isPending}
         onConfirm={() => deleteTarget && deleteMutation.mutate(deleteTarget.id)}
@@ -485,10 +494,10 @@ export function DestinationTable({
       <ConfirmDialog
         open={showBulkDeleteConfirm}
         onOpenChange={setShowBulkDeleteConfirm}
-        title={`Hapus ${selectedIds.length} Destinasi?`}
-        description="Semua destinasi yang dipilih akan dihapus secara bersamaan dari katalog pariwisata."
-        confirmText="Hapus Semua Terpilih"
-        cancelText="Batal"
+        title={`${t.common.delete} ${selectedIds.length} ${t.destinations.title}?`}
+        description={t.destinations.deleteConfirmDesc.replace('"{name}"', `${selectedIds.length} ${t.destinations.title.toLowerCase()}`)}
+        confirmText={t.common.delete}
+        cancelText={t.common.cancel}
         isDestructive
         isLoading={bulkDeleteMutation.isPending}
         onConfirm={() => bulkDeleteMutation.mutate(selectedIds)}

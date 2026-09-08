@@ -5,6 +5,7 @@ import { StatusBadge } from '@/components/common/StatusBadge';
 import { Badge } from '@/components/ui/badge';
 import { formatCurrency, formatDateTime } from '@/lib/utils/format';
 import { ItineraryTemplate } from '@/types/itinerary.types';
+import { TranslationsDetailSection } from '@/components/localization/TranslationsDetailSection';
 import { Calendar, Clock, DollarSign, Star, Edit2, Tag } from 'lucide-react';
 
 interface ItineraryDetailModalProps {
@@ -60,6 +61,16 @@ export function ItineraryDetailModal({
             {itinerary.description}
           </p>
         </div>
+
+        {/* Multilingual Content Translations Section */}
+        <TranslationsDetailSection
+          translations={itinerary.translations}
+          availableLocales={itinerary.availableLocales}
+          missingLocales={itinerary.missingLocales}
+          canonicalTitle={itinerary.title}
+          canonicalDescription={itinerary.description || undefined}
+          canonicalTransportPaceNote={itinerary.transportPaceNote || undefined}
+        />
 
         {/* Day-by-Day Activities */}
         {itinerary.days && itinerary.days.length > 0 && (

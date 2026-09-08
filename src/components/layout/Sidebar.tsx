@@ -1,5 +1,6 @@
 import React from 'react';
 import { useSidebarStore } from '@/stores/sidebar.store';
+import { useTranslation } from '@/lib/i18n/useTranslation';
 import { cn } from '@/lib/utils/cn';
 import {
   LayoutDashboard,
@@ -23,26 +24,27 @@ interface SidebarProps {
   onNavigate: (path: string) => void;
 }
 
-const NAV_ITEMS = [
-  { path: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-  { path: '/destinations', label: 'Destinasi', icon: MapPin },
-  { path: '/categories', label: 'Kategori', icon: FolderTree },
-  { path: '/restaurants', label: 'Kuliner & Restoran', icon: UtensilsCrossed },
-  { path: '/accommodations', label: 'Akomodasi & Hotel', icon: Hotel },
-  { path: '/users', label: 'Pengguna', icon: Users },
-  { path: '/reviews', label: 'Moderasi Review', icon: Star },
-  { path: '/feeds', label: 'Feed & Laporan', icon: MessageSquare },
-  { path: '/itinerary-templates', label: 'Template Rencana', icon: CalendarRange },
-  { path: '/audit-logs', label: 'Audit Log Sistem', icon: ShieldCheck },
-];
-
 export function Sidebar({ currentPath, onNavigate }: SidebarProps) {
   const { isCollapsed, toggleCollapse, isMobileOpen, setMobileOpen } = useSidebarStore();
+  const { t } = useTranslation();
 
   const handleNav = (path: string) => {
     onNavigate(path);
     setMobileOpen(false);
   };
+
+  const navItems = [
+    { path: '/dashboard', label: t.navigation.dashboard, icon: LayoutDashboard },
+    { path: '/destinations', label: t.navigation.destinations, icon: MapPin },
+    { path: '/categories', label: t.navigation.categories, icon: FolderTree },
+    { path: '/restaurants', label: t.navigation.restaurants, icon: UtensilsCrossed },
+    { path: '/accommodations', label: t.navigation.accommodations, icon: Hotel },
+    { path: '/users', label: t.navigation.users, icon: Users },
+    { path: '/reviews', label: t.navigation.reviews, icon: Star },
+    { path: '/feeds', label: t.navigation.feeds, icon: MessageSquare },
+    { path: '/itinerary-templates', label: t.navigation.itineraryTemplates, icon: CalendarRange },
+    { path: '/audit-logs', label: t.navigation.auditLogs, icon: ShieldCheck },
+  ];
 
   return (
     <>
@@ -77,7 +79,7 @@ export function Sidebar({ currentPath, onNavigate }: SidebarProps) {
                   Lombok Explorer
                 </span>
                 <span className="text-[10px] font-semibold text-emerald-600 uppercase tracking-wider">
-                  Admin Portal
+                  {t.common.adminPortal}
                 </span>
               </div>
             )}
@@ -87,6 +89,7 @@ export function Sidebar({ currentPath, onNavigate }: SidebarProps) {
           <button
             onClick={() => setMobileOpen(false)}
             className="lg:hidden p-1 rounded-md text-slate-400 hover:text-slate-600 hover:bg-slate-100"
+            aria-label={t.common.close}
           >
             <X className="h-5 w-5" />
           </button>
@@ -97,16 +100,18 @@ export function Sidebar({ currentPath, onNavigate }: SidebarProps) {
           <div className="px-2 pb-2">
             {!isCollapsed ? (
               <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">
-                Menu Utama
+                {t.navigation.mainMenu}
               </span>
             ) : (
               <div className="h-2" />
             )}
           </div>
 
-          {NAV_ITEMS.map((item) => {
+          {navItems.map((item) => {
             const Icon = item.icon;
-            const isActive = currentPath === item.path || (item.path !== '/dashboard' && currentPath.startsWith(item.path));
+            const isActive =
+              currentPath === item.path ||
+              (item.path !== '/dashboard' && currentPath.startsWith(item.path));
 
             return (
               <button

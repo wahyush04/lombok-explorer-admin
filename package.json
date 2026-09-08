@@ -10,7 +10,7 @@
     "preview": "vite preview",
     "clean": "rm -rf dist server.js",
     "lint": "tsc --noEmit",
-    "test": "tsx src/lib/services/__tests__/cloudinary-upload.test.ts",
+    "test": "tsx src/lib/services/__tests__/cloudinary-upload.test.ts && tsx src/lib/i18n/__tests__/localization.test.ts",
     "docker:build": "docker build -t lombok-explorer-admin:latest .",
     "docker:up": "docker compose up -d",
     "docker:down": "docker compose down"

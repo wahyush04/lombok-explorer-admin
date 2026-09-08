@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { accommodationSchema, AccommodationFormData } from '../schemas/accommodation.schema';
+import { accommodationSchema, AccommodationFormData, buildAccommodationTranslations } from '../schemas/accommodation.schema';
 import { accommodationApi } from '../api/accommodation.api';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Dialog, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
@@ -14,11 +14,16 @@ import { Accommodation } from '@/types/accommodation.types';
 import { REGIONS } from '@/types/common.types';
 import { ImageUploader } from '@/components/common/ImageUploader';
 import { CloudinaryAsset } from '@/types/upload.types';
+import { SupportedLocale } from '@/lib/constants/locales';
+import { TranslationCompleteness, calculateTranslationStatus } from '@/types/localization.types';
+import { TranslationEditor } from '@/components/localization/TranslationEditor';
+import { useTranslation } from '@/lib/i18n/useTranslation';
+import { setBackendValidationErrors } from '@/lib/api/api-error';
 
 interface AccommodationFormModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  accommodationToEdit?: Accommodation | null;
+  accommodationToEdit?: (Accommodation & { translations?: any[] }) | null;
   onSuccess: () => void;
 }
 
@@ -28,17 +33,19 @@ export function AccommodationFormModal({
   accommodationToEdit,
   onSuccess,
 }: AccommodationFormModalProps) {
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
   const isEdit = Boolean(accommodationToEdit);
   const [isUploading, setIsUploading] = useState(false);
+  const [contentLocale, setContentLocale] = useState<SupportedLocale>('id-ID');
 
   const {
     register,
     handleSubmit,
     reset,
-    setValue,
     watch,
-    formState: { errors },
+    setError,
+    formState: { errors, isDirty },
   } = useForm<AccommodationFormData>({
     resolver: zodResolver(accommodationSchema) as any,
     defaultValues: {
@@ -46,6 +53,8 @@ export function AccommodationFormModal({
       slug: '',
       type: 'Resort Tepi Pantai',
       description: '',
+      en_name: '',
+      en_description: '',
       pricePerNight: 750000,
       currency: 'IDR',
       address: '',
@@ -64,13 +73,46 @@ export function AccommodationFormModal({
     },
   });
 
+  const watchedName = watch('name');
+  const watchedDesc = watch('description');
+  const watchedEnName = watch('en_name');
+  const watchedEnDesc = watch('en_description');
+
+  const statusMap = useMemo<Record<SupportedLocale, TranslationCompleteness>>(() => {
+    const idStatus = calculateTranslationStatus(
+      { locale: 'id-ID', name: watchedName, description: watchedDesc },
+      ['name', 'description']
+    );
+
+    const enHasAny = Boolean(
+      (watchedEnName && watchedEnName.trim()) ||
+      (watchedEnDesc && watchedEnDesc.trim())
+    );
+
+    const enStatus = enHasAny
+      ? calculateTranslationStatus(
+          { locale: 'en-US', name: watchedEnName, description: watchedEnDesc },
+          ['name', 'description']
+        )
+      : { status: 'MISSING' as TranslationCompleteness };
+
+    return {
+      'id-ID': idStatus.status,
+      'en-US': enStatus.status,
+    };
+  }, [watchedName, watchedDesc, watchedEnName, watchedEnDesc]);
+
   useEffect(() => {
     if (accommodationToEdit) {
+      const enTrans = accommodationToEdit.translations?.find((tr: any) => tr.locale === 'en-US');
+
       reset({
         name: accommodationToEdit.name,
         slug: accommodationToEdit.slug,
         type: accommodationToEdit.type,
         description: accommodationToEdit.description,
+        en_name: enTrans?.name || '',
+        en_description: enTrans?.description || '',
         pricePerNight: accommodationToEdit.pricePerNight,
         currency: accommodationToEdit.currency || 'IDR',
         address: accommodationToEdit.address,
@@ -95,13 +137,16 @@ export function AccommodationFormModal({
         status: accommodationToEdit.status,
         isFeatured: accommodationToEdit.isFeatured,
       });
+      setContentLocale('id-ID');
     } else {
       reset({
         name: '',
         slug: '',
-        type: 'Resort Bintang 4',
+        type: 'Resort Tepi Pantai',
         description: '',
-        pricePerNight: 850000,
+        en_name: '',
+        en_description: '',
+        pricePerNight: 750000,
         currency: 'IDR',
         address: '',
         region: 'LOMBOK_BARAT',
@@ -110,180 +155,234 @@ export function AccommodationFormModal({
         coverImage: null,
         coverImageUrl: '',
         images: [],
-        facilities: ['WiFi Cepat', 'Kolam Renang', 'Sarapan Termasuk'],
-        amenities: ['AC', 'Air Hangat'],
+        facilities: ['WiFi Gratis', 'Kolam Renang', 'Restoran'],
+        amenities: ['AC', 'Kamar Mandi Pribadi'],
         contactPhone: '',
         websiteUrl: '',
         status: 'PUBLISHED',
         isFeatured: false,
       });
+      setContentLocale('id-ID');
     }
   }, [accommodationToEdit, reset]);
 
   const mutation = useMutation({
     mutationFn: async (data: AccommodationFormData) => {
+      const translations = buildAccommodationTranslations(data);
+      const payload: any = {
+        ...data,
+        translations,
+      };
+
+      if (payload.coverImage && typeof payload.coverImage === 'object' && 'secureUrl' in payload.coverImage) {
+        payload.coverImageUrl = payload.coverImage.secureUrl;
+      }
+
       if (isEdit && accommodationToEdit) {
-        return accommodationApi.updateAccommodation(accommodationToEdit.id, data);
+        return accommodationApi.updateAccommodation(accommodationToEdit.id, payload);
       } else {
-        return accommodationApi.createAccommodation(data);
+        return accommodationApi.createAccommodation(payload);
       }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['accommodations'] });
       queryClient.invalidateQueries({ queryKey: ['dashboard'] });
+      if (accommodationToEdit) {
+        queryClient.invalidateQueries({ queryKey: ['accommodations', accommodationToEdit.id] });
+      }
       onSuccess();
       onOpenChange(false);
     },
+    onError: (err) => {
+      setBackendValidationErrors(err, setError);
+    },
   });
 
-  const onSubmit = (data: any) => {
+  const onSubmit = (data: AccommodationFormData) => {
     if (isUploading) return;
-    const payload = { ...data };
-    if (payload.coverImage && typeof payload.coverImage === 'object' && 'secureUrl' in payload.coverImage) {
-      payload.coverImageUrl = payload.coverImage.secureUrl;
-    }
-    mutation.mutate(payload);
+    mutation.mutate(data);
   };
-
-  const isFeaturedValue = watch('isFeatured');
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange} maxWidth="lg">
       <DialogHeader>
-        <DialogTitle>{isEdit ? 'Edit Data Akomodasi' : 'Tambah Akomodasi Baru'}</DialogTitle>
-        <DialogDescription>
-          Kelola data hotel, resort, villa, glamping, atau homestay di seluruh wilayah pulau Lombok.
-        </DialogDescription>
+        <DialogTitle>{isEdit ? t.accommodations.editTitle : t.accommodations.createTitle}</DialogTitle>
+        <DialogDescription>{t.accommodations.modalDesc}</DialogDescription>
       </DialogHeader>
 
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 py-2 max-h-[70vh] overflow-y-auto px-1">
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 py-2 max-h-[72vh] overflow-y-auto px-1">
+        {/* Multilingual Translation Editor */}
+        <TranslationEditor
+          currentLocale={contentLocale}
+          onLocaleChange={setContentLocale}
+          statusMap={statusMap}
+          hasUnsavedChanges={isDirty}
+          onAddTranslation={() => setContentLocale('en-US')}
+        >
+          {(locale) =>
+            locale === 'id-ID' ? (
+              <div className="space-y-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">
+                      {t.accommodations.name} (id-ID) *
+                    </label>
+                    <Input placeholder="cth: Katamaran Hotel & Resort" error={errors.name?.message} {...register('name')} />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">
+                      {t.accommodations.slug} ({t.common.optional})
+                    </label>
+                    <Input placeholder="katamaran-hotel-resort" error={errors.slug?.message} {...register('slug')} />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                    {t.accommodations.description} (id-ID) *
+                  </label>
+                  <Textarea
+                    rows={3}
+                    placeholder="Deskripsi suasana penginapan, pemandangan, dan arsitektur..."
+                    error={errors.description?.message}
+                    {...register('description')}
+                  />
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                    {t.accommodations.name} (en-US)
+                  </label>
+                  <Input
+                    placeholder="e.g. Katamaran Hotel & Resort Senggigi"
+                    error={errors.en_name?.message}
+                    {...register('en_name')}
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                    {t.accommodations.description} (en-US)
+                  </label>
+                  <Textarea
+                    rows={3}
+                    placeholder="Luxury beachfront resort inspired by traditional Sasak architecture..."
+                    error={errors.en_description?.message}
+                    {...register('en_description')}
+                  />
+                </div>
+              </div>
+            )
+          }
+        </TranslationEditor>
+
+        {/* Type & Price (Shared) */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1">Nama Akomodasi *</label>
-            <Input placeholder="cth: Katamaran Hotel & Resort" error={errors.name?.message} {...register('name')} />
+            <label className="block text-xs font-semibold text-slate-700 mb-1">{t.accommodations.type} *</label>
+            <Input placeholder="Resort Bintang 5, Villa Mewah" error={errors.type?.message} {...register('type')} />
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1">Tipe Properti *</label>
-            <Input placeholder="cth: Resort Bintang 5 / Eco Glamping" error={errors.type?.message} {...register('type')} />
-          </div>
-        </div>
-
-        <div>
-          <label className="block text-xs font-semibold text-slate-700 mb-1">Deskripsi Akomodasi *</label>
-          <Textarea
-            rows={3}
-            placeholder="Kenyamanan kamar, panorama pemandangan, layanan staf, akses pantai..."
-            error={errors.description?.message}
-            {...register('description')}
-          />
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1">Harga Per Malam (IDR) *</label>
-            <Input type="number" placeholder="850000" error={errors.pricePerNight?.message} {...register('pricePerNight')} />
+            <label className="block text-xs font-semibold text-slate-700 mb-1">{t.accommodations.pricePerNight} (IDR) *</label>
+            <Input type="number" placeholder="750000" error={errors.pricePerNight?.message} {...register('pricePerNight')} />
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1">Wilayah / Kabupaten *</label>
+            <label className="block text-xs font-semibold text-slate-700 mb-1">{t.accommodations.region} *</label>
             <Select error={errors.region?.message} {...register('region')}>
               {REGIONS.map((r) => (
                 <option key={r.value} value={r.value}>
-                  {r.label}
+                  {(t.regions as any)[r.value] || r.label}
                 </option>
               ))}
             </Select>
           </div>
         </div>
 
+        {/* Address */}
         <div>
-          <label className="block text-xs font-semibold text-slate-700 mb-1">Alamat Lengkap Properti *</label>
-          <Input placeholder="Jl. Raya Senggigi, Mangsit, Batu Layar..." error={errors.address?.message} {...register('address')} />
+          <label className="block text-xs font-semibold text-slate-700 mb-1">{t.accommodations.address} *</label>
+          <Input placeholder="Jl. Raya Mangsit, Senggigi, Lombok Barat" error={errors.address?.message} {...register('address')} />
         </div>
 
+        {/* Location Coordinates */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1">Nomor Telepon / Reservasi</label>
-            <Input placeholder="+62 370 6197888" {...register('contactPhone')} />
-          </div>
-
-          <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1">Website Resmi</label>
-            <Input placeholder="https://katamaranresort.com" error={errors.websiteUrl?.message} {...register('websiteUrl')} />
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1">Latitude</label>
+            <label className="block text-xs font-semibold text-slate-700 mb-1">{t.destinations.latitude} *</label>
             <Input type="number" step="any" placeholder="-8.4912" error={errors.latitude?.message} {...register('latitude')} />
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1">Longitude</label>
+            <label className="block text-xs font-semibold text-slate-700 mb-1">{t.destinations.longitude} *</label>
             <Input type="number" step="any" placeholder="116.0398" error={errors.longitude?.message} {...register('longitude')} />
           </div>
         </div>
 
-        {/* Media: Cover Image & Gallery */}
-        <div className="space-y-4 pt-2 border-t border-slate-100">
+        {/* Contact & Website */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-xs font-semibold text-slate-700 mb-1">{t.accommodations.contactPhone}</label>
+            <Input placeholder="+62 370 1234567" error={errors.contactPhone?.message} {...register('contactPhone')} />
+          </div>
+
+          <div>
+            <label className="block text-xs font-semibold text-slate-700 mb-1">{t.accommodations.websiteUrl}</label>
+            <Input placeholder="https://katamaranresort.com" error={errors.websiteUrl?.message} {...register('websiteUrl')} />
+          </div>
+        </div>
+
+        {/* Shared Cover Image */}
+        <div>
+          <label className="block text-xs font-semibold text-slate-700 mb-1.5">{t.accommodations.coverImage}</label>
           <ImageUploader
             resourceType="ACCOMMODATION"
-            resourceId={accommodationToEdit?.id}
             multiple={false}
-            label="Foto Sampul Akomodasi *"
-            description="Pilih atau seret foto utama properti / resort untuk diunggah langsung ke Cloudinary"
-            value={watch('coverImage')}
+            maxFiles={1}
+            value={watch('coverImage') as CloudinaryAsset | null}
             onChange={(asset) => {
-              setValue('coverImage', asset, { shouldValidate: true });
-              setValue('coverImageUrl', asset?.secureUrl || '', { shouldValidate: true });
+              const primary = Array.isArray(asset) ? asset[0] : asset;
+              reset((prev) => ({
+                ...prev,
+                coverImage: primary || null,
+                coverImageUrl: primary ? primary.secureUrl : '',
+              }));
             }}
             onUploadingChange={setIsUploading}
-            error={(errors.coverImage?.message as string) || errors.coverImageUrl?.message}
-          />
-
-          <ImageUploader
-            resourceType="ACCOMMODATION"
-            resourceId={accommodationToEdit?.id}
-            multiple={true}
-            maxFiles={10}
-            label="Galeri Foto Kamar & Fasilitas Akomodasi"
-            description="Unggah hingga 10 foto pendukung kamar, kolam renang, dan fasilitas resort"
-            value={watch('images')}
-            onChange={(assets) => setValue('images', assets, { shouldValidate: true })}
-            onUploadingChange={setIsUploading}
           />
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
-          <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1">Status</label>
-            <Select {...register('status')}>
-              <option value="PUBLISHED">PUBLISHED (Aktif)</option>
-              <option value="DRAFT">DRAFT (Konsep)</option>
-              <option value="ARCHIVED">ARCHIVED (Arsip)</option>
-            </Select>
-          </div>
-
-          <div className="flex items-center space-x-2 pt-6">
+        {/* Status */}
+        <div className="flex items-center justify-between pt-2 border-t border-slate-100">
+          <div className="flex items-center space-x-2">
             <Checkbox
-              id="isFeaturedAcc"
-              checked={isFeaturedValue}
-              onCheckedChange={(checked) => setValue('isFeatured', checked)}
+              id="accFeatured"
+              checked={watch('isFeatured')}
+              onCheckedChange={(checked) => reset((prev) => ({ ...prev, isFeatured: Boolean(checked) }))}
             />
-            <label htmlFor="isFeaturedAcc" className="text-xs font-medium text-slate-700 cursor-pointer">
-              Tandai sebagai Akomodasi Unggulan (Featured)
+            <label htmlFor="accFeatured" className="text-xs font-medium text-slate-700 cursor-pointer">
+              {t.destinations.isFeatured}
             </label>
           </div>
+
+          <div className="flex items-center space-x-2">
+            <span className="text-xs font-semibold text-slate-700">{t.common.status}:</span>
+            <Select className="w-36 h-8 text-xs" {...register('status')}>
+              <option value="PUBLISHED">{t.statuses.PUBLISHED}</option>
+              <option value="DRAFT">{t.statuses.DRAFT}</option>
+              <option value="ARCHIVED">{t.statuses.ARCHIVED}</option>
+            </Select>
+          </div>
         </div>
 
-        <DialogFooter className="pt-3 border-t border-slate-100">
+        <DialogFooter className="pt-4 border-t border-slate-200">
           <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={mutation.isPending}>
-            Batal
+            {t.common.cancel}
           </Button>
-          <Button type="submit" isLoading={mutation.isPending} disabled={mutation.isPending || isUploading}>
-            {isUploading ? 'Mengunggah Gambar...' : isEdit ? 'Simpan Perubahan' : 'Simpan Akomodasi'}
+          <Button type="submit" isLoading={mutation.isPending || isUploading} disabled={isUploading}>
+            {isEdit ? t.common.saveChanges : t.common.create}
           </Button>
         </DialogFooter>
       </form>

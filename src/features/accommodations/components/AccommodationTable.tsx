@@ -221,6 +221,12 @@ export function AccommodationTable({ onAdd, onView, onEdit }: AccommodationTable
                         <span className="text-[11px] text-slate-400 truncate block">
                           {acc.address}
                         </span>
+                        {(acc.missingLocales?.includes('en-US') ||
+                          (Array.isArray(acc.translations) && !acc.translations.some((t) => t.locale === 'en-US'))) && (
+                          <span className="text-[10px] text-amber-600 block mt-0.5">
+                            • English missing
+                          </span>
+                        )}
                       </div>
                     </div>
                   </TableCell>

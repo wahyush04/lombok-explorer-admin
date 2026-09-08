@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useAuthStore } from '@/stores/auth.store';
+import { useTranslation } from '@/lib/i18n/useTranslation';
 import { AdminLayout } from '@/components/layout/AdminLayout';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { LoginForm } from '@/features/auth/components/LoginForm';
@@ -62,6 +63,7 @@ const queryClient = new QueryClient({
 
 export function AppContent() {
   const { isAuthenticated, checkAuth } = useAuthStore();
+  const { t } = useTranslation();
 
   // Route State
   const [currentPath, setCurrentPath] = useState<string>(() => {
@@ -133,7 +135,7 @@ export function AppContent() {
   const [itnSelected, setItnSelected] = useState<ItineraryTemplate | null>(null);
 
   if (!isAuthenticated) {
-    return <LoginForm onSuccess={() => setCurrentPath('/dashboard')} />;
+    return <LoginForm onSuccess={() => handleNavigate('/dashboard')} />;
   }
 
   const renderCurrentModule = () => {
@@ -142,7 +144,7 @@ export function AppContent() {
         return (
           <div className="space-y-6">
             <PageHeader
-              title="Dashboard Analitik"
+              title={t.navigation.dashboard}
               description="Ringkasan performa konten, aktivitas wisatawan, dan statistik pariwisata Lombok."
             />
             <DashboardOverview onNavigate={handleNavigate} />
@@ -153,8 +155,8 @@ export function AppContent() {
         return (
           <div className="space-y-6">
             <PageHeader
-              title="Destinasi Pariwisata"
-              description="Katalog daya tarik wisata alam, pantai, pegunungan, dan budaya di seluruh pulau Lombok."
+              title={t.destinations.title}
+              description={t.destinations.subtitle}
             />
             <DestinationTable
               onAdd={() => {
@@ -181,8 +183,8 @@ export function AppContent() {
         return (
           <div className="space-y-6">
             <PageHeader
-              title="Kategori Wisata"
-              description="Struktur pengelompokan jenis atraksi dan daya tarik pariwisata Lombok."
+              title={t.categories.title}
+              description={t.categories.subtitle}
             />
             <CategoryTable
               onAdd={() => {
@@ -201,8 +203,8 @@ export function AppContent() {
         return (
           <div className="space-y-6">
             <PageHeader
-              title="Kuliner & Restoran"
-              description="Daftar rumah makan, warung tradisional Sasak, sajian kuliner halal, dan kafe Lombok."
+              title={t.restaurants.title}
+              description={t.restaurants.subtitle}
             />
             <RestaurantTable
               onAdd={() => {
@@ -225,8 +227,8 @@ export function AppContent() {
         return (
           <div className="space-y-6">
             <PageHeader
-              title="Akomodasi & Hotel"
-              description="Pengelolaan hotel, resort tepi pantai, villa pribadi, dan homestay di seluruh wilayah Lombok."
+              title={t.accommodations.title}
+              description={t.accommodations.subtitle}
             />
             <AccommodationTable
               onAdd={() => {
@@ -282,8 +284,8 @@ export function AppContent() {
         return (
           <div className="space-y-6">
             <PageHeader
-              title="Template Rencana Perjalanan"
-              description="Panduan paket rencana perjalanan terstruktur harian bagi para wisatawan."
+              title={t.itineraries.title}
+              description={t.itineraries.subtitle}
             />
             <ItineraryTable
               onAdd={() => {

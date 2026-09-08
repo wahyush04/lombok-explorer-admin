@@ -215,6 +215,12 @@ export function RestaurantTable({ onAdd, onView, onEdit }: RestaurantTableProps)
                         <span className="text-[11px] text-slate-400 truncate block">
                           {rest.address}
                         </span>
+                        {(rest.missingLocales?.includes('en-US') ||
+                          (Array.isArray(rest.translations) && !rest.translations.some((t) => t.locale === 'en-US'))) && (
+                          <span className="text-[10px] text-amber-600 block mt-0.5">
+                            • English missing
+                          </span>
+                        )}
                       </div>
                     </div>
                   </TableCell>

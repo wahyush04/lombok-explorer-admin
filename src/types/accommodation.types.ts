@@ -1,6 +1,7 @@
 import { PaginationMeta, Region } from './auth.types';
 import { DestinationStatus } from './destination.types';
 import { CloudinaryAsset } from './upload.types';
+import { AccommodationTranslationDto } from './localization.types';
 
 export interface AdminAccommodationDto {
   id: string;
@@ -24,6 +25,9 @@ export interface AdminAccommodationDto {
   websiteUrl?: string | null;
   status: DestinationStatus;
   isFeatured: boolean;
+  translations?: AccommodationTranslationDto[];
+  availableLocales?: string[];
+  missingLocales?: string[];
   createdAt: string;
   updatedAt: string;
   deletedAt?: string | null;
@@ -61,6 +65,7 @@ export interface CreateAccommodationRequest {
   websiteUrl?: string;
   status?: DestinationStatus;
   isFeatured?: boolean;
+  translations?: AccommodationTranslationDto[];
 }
 
 export interface UpdateAccommodationRequest {
@@ -82,6 +87,7 @@ export interface UpdateAccommodationRequest {
   websiteUrl?: string;
   status?: DestinationStatus;
   isFeatured?: boolean;
+  translations?: AccommodationTranslationDto[];
 }
 
 export type Accommodation = AdminAccommodationDto;

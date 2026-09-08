@@ -22,6 +22,9 @@ ENV VITE_API_BASE_URL=$VITE_API_BASE_URL
 # Build client SPA and server bundle
 RUN npm run build
 
+# Prune devDependencies to keep only production runtime dependencies
+RUN npm prune --omit=dev
+
 # ==========================================
 # Stage 2: Production Runner
 # ==========================================
@@ -32,14 +35,9 @@ WORKDIR /app
 ENV NODE_ENV=production
 ENV PORT=3000
 
-# Install production dependencies only
-COPY package.json package-lock.json ./
-RUN npm config set fetch-retries 5 \
-    && npm config set fetch-retry-mintimeout 20000 \
-    && npm config set fetch-retry-maxtimeout 120000 \
-    && npm ci --omit=dev && npm cache clean --force
-
-# Copy compiled bundles from builder
+# Copy production dependencies and compiled output from builder
+COPY --from=builder /app/package.json ./
+COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/dist ./dist
 
 # Use non-root node user for container security
