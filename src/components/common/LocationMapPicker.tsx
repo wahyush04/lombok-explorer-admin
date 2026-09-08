@@ -103,34 +103,28 @@ export const LocationMapPicker: React.FC<LocationMapPickerProps> = ({
     // Add navigation controls (zoom, compass)
     map.addControl(new mapboxgl.NavigationControl({ showCompass: true, visualizePitch: true }), 'top-right');
 
-    // Create custom pin element for marker
-    const pinEl = document.createElement('div');
-    pinEl.className = 'group cursor-grab active:cursor-grabbing transition-transform transform hover:scale-110';
-    pinEl.innerHTML = `
-      <div class="relative flex items-center justify-center">
-        <div class="absolute -top-1 w-4 h-4 bg-rose-500 rounded-full animate-ping opacity-75"></div>
-        <div class="w-8 h-8 rounded-full bg-rose-600 text-white flex items-center justify-center shadow-lg border-2 border-white ring-2 ring-rose-500/30">
-          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/>
-            <circle cx="12" cy="10" r="3"/>
-          </svg>
-        </div>
-      </div>
-    `;
-
-    // Create draggable marker
+    // Create native draggable marker (avoids CSS transform conflicts and hover jitter)
     const marker = new mapboxgl.Marker({
-      element: pinEl,
+      color: '#e11d48',
       draggable: true,
     })
       .setLngLat([initialLng, initialLat])
       .addTo(map);
 
-    // Marker drag event
+    // Marker live drag event to sync coordinates in real time
+    marker.on('drag', () => {
+      const lngLat = marker.getLngLat();
+      setLatInput(String(Number(lngLat.lat.toFixed(6))));
+      setLngInput(String(Number(lngLat.lng.toFixed(6))));
+    });
+
+    // Marker dragend event
     marker.on('dragend', () => {
       const lngLat = marker.getLngLat();
       const newLat = Number(lngLat.lat.toFixed(6));
       const newLng = Number(lngLat.lng.toFixed(6));
+      setLatInput(String(newLat));
+      setLngInput(String(newLng));
       onLocationChange(newLat, newLng);
     });
 
@@ -139,6 +133,8 @@ export const LocationMapPicker: React.FC<LocationMapPickerProps> = ({
       const newLat = Number(e.lngLat.lat.toFixed(6));
       const newLng = Number(e.lngLat.lng.toFixed(6));
       marker.setLngLat([newLng, newLat]);
+      setLatInput(String(newLat));
+      setLngInput(String(newLng));
       onLocationChange(newLat, newLng);
     });
 
