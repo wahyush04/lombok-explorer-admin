@@ -92,12 +92,32 @@ export const LocationMapPicker: React.FC<LocationMapPickerProps> = ({
     const initialLat = validLat ?? LOMBOK_CENTER[1];
     const initialZoom = hasCoordinates ? 13 : DEFAULT_ZOOM;
 
+    // Disable Mapbox telemetry to prevent adblocker ERR_BLOCKED_BY_CLIENT errors
+    if ((mapboxgl as any).config) {
+      try {
+        Object.defineProperty((mapboxgl as any).config, 'EVENTS_URL', {
+          value: null,
+          configurable: true,
+          writable: true,
+        });
+      } catch {
+        // Ignore if not configurable
+      }
+    }
+
     const map = new mapboxgl.Map({
       container: mapContainerRef.current,
       style: 'mapbox://styles/mapbox/streets-v12',
       center: [initialLng, initialLat],
       zoom: initialZoom,
       attributionControl: true,
+      transformRequest: (url) => {
+        // Intercept and suppress any telemetry events requests
+        if (url && url.includes('events.mapbox.com')) {
+          return { url: '' };
+        }
+        return { url };
+      },
     });
 
     // Add navigation controls (zoom, compass)
