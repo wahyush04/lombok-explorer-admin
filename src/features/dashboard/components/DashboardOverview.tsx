@@ -9,6 +9,9 @@ import { formatNumber } from '@/lib/utils/format';
 import {
   Users,
   MapPin,
+  Navigation,
+  DollarSign,
+  Wallet,
   FolderTree,
   UtensilsCrossed,
   Hotel,
@@ -400,6 +403,35 @@ export function DashboardOverview({ onNavigate }: DashboardOverviewProps) {
           </div>
         </CardContent>
       </Card>
+
+      {/* Tourist Economic Expense Breakdown Section */}
+      {data?.expenseBreakdown && data.expenseBreakdown.length > 0 && (
+        <Card className="bg-white border-slate-200">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-bold flex items-center gap-2 text-slate-800">
+              <DollarSign className="h-4 w-4 text-emerald-600" />
+              Estimasi Pengeluaran Wisatawan Berdasarkan Kategori (Lombok)
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2">
+              {data.expenseBreakdown.map((ex: any) => (
+                <div key={ex.category} className="p-3 rounded-lg bg-slate-50 border border-slate-100">
+                  <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider block mb-1">
+                    {ex.category}
+                  </span>
+                  <div className="text-base font-bold text-slate-900">
+                    Rp {formatNumber(ex.totalAmount)}
+                  </div>
+                  <span className="text-[10px] text-slate-400 mt-0.5 block">
+                    {ex.count} transaksi tercatat
+                  </span>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }

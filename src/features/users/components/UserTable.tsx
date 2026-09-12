@@ -47,7 +47,7 @@ export function UserTable() {
 
   // Role Change Dialog
   const [roleTarget, setRoleTarget] = useState<User | null>(null);
-  const [nextRole, setNextRole] = useState<UserRole>('MODERATOR');
+  const [nextRole, setNextRole] = useState<UserRole>('ADMIN');
 
   const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ['users', filters],
@@ -99,12 +99,7 @@ export function UserTable() {
             <ShieldCheck className="h-3 w-3 mr-1" /> ADMIN
           </Badge>
         );
-      case 'MODERATOR':
-        return (
-          <Badge variant="secondary" className="text-[10px] bg-cyan-100 text-cyan-800">
-            <Shield className="h-3 w-3 mr-1" /> MODERATOR
-          </Badge>
-        );
+      
       default:
         return (
           <Badge variant="outline" className="text-[10px] text-slate-600">

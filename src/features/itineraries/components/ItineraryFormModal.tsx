@@ -3,7 +3,9 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { itinerarySchema, ItineraryFormData, buildItineraryTranslations } from '../schemas/itinerary.schema';
 import { itineraryApi } from '../api/itinerary.api';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { destinationApi } from '@/features/destinations/api/destination.api';
+import { restaurantApi } from '@/features/restaurants/api/restaurant.api';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Dialog, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -39,6 +41,24 @@ export function ItineraryFormModal({
   const [isUploading, setIsUploading] = useState(false);
   const [days, setDays] = useState<AdminTemplateDayInput[]>([]);
   const [contentLocale, setContentLocale] = useState<SupportedLocale>('id-ID');
+
+  const { data: destinationsData } = useQuery({
+    queryKey: ['destinations-select'],
+    queryFn: async () => {
+      const res = await destinationApi.getDestinations({ limit: 100 });
+      return res.data || [];
+    },
+    enabled: open,
+  });
+
+  const { data: restaurantsData } = useQuery({
+    queryKey: ['restaurants-select'],
+    queryFn: async () => {
+      const res = await restaurantApi.getRestaurants({ limit: 100 });
+      return res.data || [];
+    },
+    enabled: open,
+  });
 
   const {
     register,
@@ -312,11 +332,45 @@ export function ItineraryFormModal({
         </div>
 
         {/* Days & Routing Breakdown (Shared) */}
-        <div className="space-y-3 pt-2 border-t border-slate-100">
-          <div className="flex items-center justify-between">
+        <div className="space-y-4 pt-2 border-t border-slate-100">
+          {/* Metadata Travel Style & Budget */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 mb-1">Gaya Liburan</label>
+              <Select className="text-xs h-8" {...register('travelStyle')}>
+                <option value="BEACH_RELAXATION">Beach Relaxation</option>
+                <option value="NATURE_ADVENTURE">Nature Adventure</option>
+                <option value="CULTURE_HERITAGE">Culture Heritage</option>
+                <option value="CULINARY_EXPLORER">Culinary Explorer</option>
+                <option value="PHOTOGRAPHY_SPOTS">Photography Spots</option>
+                <option value="FAMILY_FRIENDLY">Family Friendly</option>
+              </Select>
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 mb-1">Tingkat Budget</label>
+              <Select className="text-xs h-8" {...register('budgetLevel')}>
+                <option value="BUDGET">Budget Friendly</option>
+                <option value="MID_RANGE">Mid Range</option>
+                <option value="LUXURY">Luxury Experience</option>
+              </Select>
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 mb-1">Moda Transportasi</label>
+              <Select className="text-xs h-8" {...register('transportationMode')}>
+                <option value="CAR">Mobil Sewa / Pribadi</option>
+                <option value="MOTORCYCLE">Sepeda Motor</option>
+                <option value="WALKING">Jalan Kaki</option>
+                <option value="PUBLIC_TRANSPORT">Transportasi Umum</option>
+              </Select>
+            </div>
+          </div>
+
+          <div className="flex items-center justify-between pt-2 border-t border-slate-100">
             <label className="text-xs font-semibold text-slate-700 flex items-center gap-1.5">
               <Calendar className="h-4 w-4 text-emerald-600" />
-              Susunan Rute Harian ({days.length} Hari)
+              Susunan Rute & Destinasi Harian ({days.length} Hari)
             </label>
             <Button type="button" size="sm" variant="outline" onClick={handleAddDay} className="h-7 text-xs gap-1">
               <Plus className="h-3.5 w-3.5" />
@@ -324,15 +378,20 @@ export function ItineraryFormModal({
             </Button>
           </div>
 
-          <div className="space-y-2">
-            {days.map((day, idx) => (
-              <div key={idx} className="p-3 bg-slate-50 border border-slate-200 rounded-lg space-y-2">
+          <div className="space-y-3">
+            {days.map((day, dIdx) => (
+              <div key={dIdx} className="p-3.5 bg-slate-50 border border-slate-200 rounded-xl space-y-3">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold text-slate-800">Hari ke-{day.dayNumber}</span>
+                  <span className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                    <span className="flex h-5 w-5 rounded-full bg-emerald-600 text-white text-[10px] items-center justify-center">
+                      {day.dayNumber}
+                    </span>
+                    Hari ke-{day.dayNumber}
+                  </span>
                   {days.length > 1 && (
                     <button
                       type="button"
-                      onClick={() => handleRemoveDay(idx)}
+                      onClick={() => handleRemoveDay(dIdx)}
                       className="text-slate-400 hover:text-rose-600 transition-colors p-1"
                       title="Hapus Hari"
                     >
@@ -340,16 +399,176 @@ export function ItineraryFormModal({
                     </button>
                   )}
                 </div>
+
                 <Input
                   value={day.title}
                   onChange={(e) => {
                     const newDays = [...days];
-                    newDays[idx].title = e.target.value;
+                    newDays[dIdx].title = e.target.value;
                     setDays(newDays);
                   }}
-                  placeholder="Judul rute hari ini..."
+                  placeholder="Judul hari cth: Menikmati Pantai & Bukit Mandalika..."
                   className="bg-white text-xs h-8"
                 />
+
+                {/* Activities for this day */}
+                <div className="space-y-2 pt-2 border-t border-slate-200/60">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[11px] font-semibold text-slate-600">
+                      Daftar Kunjungan & Aktivitas ({(day.activities || []).length})
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const newDays = [...days];
+                        const acts = newDays[dIdx].activities || [];
+                        acts.push({
+                          itemType: 'DESTINATION',
+                          destinationId: destinationsData?.[0]?.id || null,
+                          restaurantId: null,
+                          customTitle: '',
+                          startTime: '09:00',
+                          endTime: '11:00',
+                          estimatedDurationMinutes: 120,
+                          estimatedCost: 10000,
+                          activityNotes: '',
+                        });
+                        newDays[dIdx].activities = acts;
+                        setDays(newDays);
+                      }}
+                      className="text-[11px] font-semibold text-emerald-700 hover:text-emerald-800 flex items-center gap-1"
+                    >
+                      <Plus className="h-3 w-3" /> Tambah Kunjungan
+                    </button>
+                  </div>
+
+                  {(day.activities || []).map((act: any, aIdx: number) => (
+                    <div key={aIdx} className="p-2.5 bg-white border border-slate-200 rounded-lg space-y-2 text-xs">
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="flex items-center gap-2 flex-1">
+                          <Select
+                            value={act.itemType}
+                            onChange={(e) => {
+                              const newDays = [...days];
+                              newDays[dIdx].activities[aIdx].itemType = e.target.value;
+                              setDays(newDays);
+                            }}
+                            className="h-7 text-[11px] w-32"
+                          >
+                            <option value="DESTINATION">Destinasi</option>
+                            <option value="RESTAURANT">Kuliner</option>
+                            <option value="CUSTOM">Kustom</option>
+                          </Select>
+
+                          {act.itemType === 'DESTINATION' && (
+                            <Select
+                              value={act.destinationId || ''}
+                              onChange={(e) => {
+                                const newDays = [...days];
+                                newDays[dIdx].activities[aIdx].destinationId = e.target.value;
+                                setDays(newDays);
+                              }}
+                              className="h-7 text-[11px] flex-1"
+                            >
+                              <option value="">-- Pilih Destinasi Wisata --</option>
+                              {(destinationsData || []).map((dst: any) => (
+                                <option key={dst.id} value={dst.id}>
+                                  {dst.name} ({dst.region})
+                                </option>
+                              ))}
+                            </Select>
+                          )}
+
+                          {act.itemType === 'RESTAURANT' && (
+                            <Select
+                              value={act.restaurantId || ''}
+                              onChange={(e) => {
+                                const newDays = [...days];
+                                newDays[dIdx].activities[aIdx].restaurantId = e.target.value;
+                                setDays(newDays);
+                              }}
+                              className="h-7 text-[11px] flex-1"
+                            >
+                              <option value="">-- Pilih Kuliner / Restoran --</option>
+                              {(restaurantsData || []).map((rst: any) => (
+                                <option key={rst.id} value={rst.id}>
+                                  {rst.name} ({rst.cuisineType})
+                                </option>
+                              ))}
+                            </Select>
+                          )}
+
+                          {act.itemType === 'CUSTOM' && (
+                            <Input
+                              value={act.customTitle || ''}
+                              onChange={(e) => {
+                                const newDays = [...days];
+                                newDays[dIdx].activities[aIdx].customTitle = e.target.value;
+                                setDays(newDays);
+                              }}
+                              placeholder="Nama aktivitas khusus..."
+                              className="h-7 text-[11px] flex-1"
+                            />
+                          )}
+                        </div>
+
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const newDays = [...days];
+                            newDays[dIdx].activities.splice(aIdx, 1);
+                            setDays(newDays);
+                          }}
+                          className="text-slate-400 hover:text-rose-600 p-1"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
+
+                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-[11px]">
+                        <div>
+                          <label className="text-slate-500 block mb-0.5">Jam Mulai</label>
+                          <Input
+                            value={act.startTime || ''}
+                            onChange={(e) => {
+                              const newDays = [...days];
+                              newDays[dIdx].activities[aIdx].startTime = e.target.value;
+                              setDays(newDays);
+                            }}
+                            placeholder="09:00"
+                            className="h-6 text-[11px]"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-slate-500 block mb-0.5">Jam Selesai</label>
+                          <Input
+                            value={act.endTime || ''}
+                            onChange={(e) => {
+                              const newDays = [...days];
+                              newDays[dIdx].activities[aIdx].endTime = e.target.value;
+                              setDays(newDays);
+                            }}
+                            placeholder="11:00"
+                            className="h-6 text-[11px]"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-slate-500 block mb-0.5">Biaya (IDR)</label>
+                          <Input
+                            type="number"
+                            value={act.estimatedCost || 0}
+                            onChange={(e) => {
+                              const newDays = [...days];
+                              newDays[dIdx].activities[aIdx].estimatedCost = Number(e.target.value);
+                              setDays(newDays);
+                            }}
+                            className="h-6 text-[11px]"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
             ))}
           </div>

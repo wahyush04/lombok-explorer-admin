@@ -52,6 +52,9 @@ import { ItineraryTemplate } from '@/types/itinerary.types';
 
 // Audit Logs
 import { AuditLogTable } from '@/features/audit-logs/components/AuditLogTable';
+import { TripSessionTable } from '@/features/trip-sessions/components/TripSessionTable';
+import { NotificationView } from '@/features/notifications/components/NotificationView';
+import { RecommendationTable } from '@/features/recommendations/components/RecommendationTable';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -180,6 +183,39 @@ export function AppContent() {
                 setDstGalleryOpen(true);
               }}
             />
+          </div>
+        );
+
+      case '/live-trips':
+        return (
+          <div className="space-y-6">
+            <PageHeader
+              title="Live Trip Radar & Monitoring Wisatawan"
+              description="Pantau sesi perjalanan wisatawan aktif, pergerakan koordinat GPS real-time, dan pemenuhan rute di Lombok."
+            />
+            <TripSessionTable />
+          </div>
+        );
+
+      case '/notifications':
+        return (
+          <div className="space-y-6">
+            <PageHeader
+              title="Pusat Siaran Notifikasi (FCM Broadcast)"
+              description="Kirim pengumuman darurat, event pariwisata, dan informasi penting langsung ke aplikasi ponsel wisatawan."
+            />
+            <NotificationView />
+          </div>
+        );
+
+      case '/recommendations':
+        return (
+          <div className="space-y-6">
+            <PageHeader
+              title="Kurasi Rekomendasi & Banner Promosi"
+              description="Kelola kumpulan highlight spot wisata pilihan dan banner rekomendasi pintar di aplikasi mobile."
+            />
+            <RecommendationTable />
           </div>
         );
 

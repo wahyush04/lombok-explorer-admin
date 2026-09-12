@@ -4,6 +4,9 @@ import { useTranslation } from '@/lib/i18n/useTranslation';
 import { cn } from '@/lib/utils/cn';
 import {
   LayoutDashboard,
+  Navigation,
+  Bell,
+  Sparkles,
   MapPin,
   FolderTree,
   UtensilsCrossed,
@@ -35,6 +38,9 @@ export function Sidebar({ currentPath, onNavigate }: SidebarProps) {
 
   const navItems = [
     { path: '/dashboard', label: t.navigation.dashboard, icon: LayoutDashboard },
+    { path: '/live-trips', label: 'Live Trip Radar', icon: Navigation },
+    { path: '/notifications', label: 'Broadcast Notifikasi', icon: Bell },
+    { path: '/recommendations', label: 'Kurasi Rekomendasi', icon: Sparkles },
     { path: '/destinations', label: t.navigation.destinations, icon: MapPin },
     { path: '/categories', label: t.navigation.categories, icon: FolderTree },
     { path: '/restaurants', label: t.navigation.restaurants, icon: UtensilsCrossed },

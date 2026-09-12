@@ -1,7 +1,7 @@
 import { PaginationMeta } from './api.types';
 export type { PaginationMeta } from './api.types';
 
-export type UserRole = 'USER' | 'ADMIN' | 'MODERATOR';
+export type UserRole = 'USER' | 'ADMIN';
 export type UserStatus = 'ACTIVE' | 'SUSPENDED' | 'DEACTIVATED' | 'INACTIVE';
 
 export type TravelStyle =

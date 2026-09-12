@@ -3,11 +3,16 @@ import { CloudinaryAsset } from '@/types/upload.types';
 import { ItineraryTemplateTranslationDto } from '@/types/localization.types';
 
 export const itineraryDayActivitySchema = z.object({
-  time: z.string().optional(),
-  title: z.string().min(2, 'Judul aktivitas minimal 2 karakter'),
-  description: z.string().optional(),
-  destinationId: z.string().optional(),
-  estimatedMinutes: z.coerce.number().optional(),
+  itemType: z.enum(['DESTINATION', 'RESTAURANT', 'ACCOMMODATION', 'CUSTOM']).default('DESTINATION'),
+  destinationId: z.string().optional().nullable(),
+  restaurantId: z.string().optional().nullable(),
+  accommodationId: z.string().optional().nullable(),
+  customTitle: z.string().optional().nullable(),
+  startTime: z.string().optional().nullable(),
+  endTime: z.string().optional().nullable(),
+  estimatedDurationMinutes: z.coerce.number().default(60),
+  estimatedCost: z.coerce.number().default(0),
+  activityNotes: z.string().optional().nullable(),
 });
 
 export const itineraryDaySchema = z.object({
@@ -38,6 +43,9 @@ export const itinerarySchema = z
     en_transportPaceNote: z.string().optional(),
 
     // Shared fields
+    travelStyle: z.string().default('BEACH_RELAXATION'),
+    budgetLevel: z.string().default('MID_RANGE'),
+    transportationMode: z.string().default('CAR'),
     durationDays: z.coerce.number().min(1, 'Durasi minimal 1 hari').max(14, 'Durasi maksimal 14 hari'),
     estimatedCost: z.coerce.number().min(0).default(500000),
     currency: z.string().default('IDR'),

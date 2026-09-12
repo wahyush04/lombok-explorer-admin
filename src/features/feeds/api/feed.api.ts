@@ -11,6 +11,17 @@ import {
 } from '@/types/feed.types';
 
 export const feedApi = {
+  async getAllPosts(params?: Record<string, unknown>): Promise<any> {
+    return apiClient.get('/feeds/posts', params);
+  },
+
+  async getAllComments(params?: Record<string, unknown>): Promise<any> {
+    return apiClient.get('/feeds/comments', params);
+  },
+
+  async deleteComment(id: string): Promise<any> {
+    return apiClient.delete(`/feeds/comments/${id}`);
+  },
   // Feed Reports (OpenAPI /feeds/reports)
   getReports: async (filters?: FeedReportFilters): Promise<PaginatedApiResponse<AdminPostReportListItem[]>> => {
     return apiClient.get<PaginatedApiResponse<AdminPostReportListItem[]>>('/feeds/reports', filters as Record<string, unknown>);

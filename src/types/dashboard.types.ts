@@ -7,6 +7,9 @@ export interface DashboardOverviewDto {
   totalReviews: number;
   pendingReviews: number;
   totalItineraries: number;
+  activeTripSessions?: number;
+  completedTripSessions?: number;
+  totalExpensesAmount?: number;
 }
 
 export interface DashboardPeriodicMetricsDto {
@@ -41,6 +44,12 @@ export interface DashboardFavoritedDestinationDto {
   coverImageUrl?: string;
 }
 
+export interface DashboardExpenseBreakdown {
+  category: string;
+  totalAmount: number;
+  count: number;
+}
+
 export interface DashboardStatisticsDto {
   overview: DashboardOverviewDto;
   periodicMetrics: DashboardPeriodicMetricsDto;
@@ -48,6 +57,7 @@ export interface DashboardStatisticsDto {
     popularDestinations: DashboardPopularDestinationDto[];
     mostFavoritedDestinations: DashboardFavoritedDestinationDto[];
   };
+  expenseBreakdown?: DashboardExpenseBreakdown[];
 }
 
 export interface DashboardResponse {

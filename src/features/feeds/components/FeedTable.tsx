@@ -33,6 +33,7 @@ import {
 
 export function FeedTable() {
   const queryClient = useQueryClient();
+  const [activeTab, setActiveTab] = useState<'reports' | 'posts' | 'comments'>('reports');
 
   const [filters, setFilters] = useState<FeedReportFilters>({
     page: 1,
@@ -88,6 +89,33 @@ export function FeedTable() {
 
   const reports = data?.data || [];
   const meta = data?.meta;
+
+  const { data: postsData, isLoading: isPostsLoading } = useQuery({
+    queryKey: ['admin-feed-posts', filters.search],
+    queryFn: async () => {
+      const res = await feedApi.getAllPosts({ search: filters.search, limit: 12 });
+      return res.data || [];
+    },
+    enabled: activeTab === 'posts',
+  });
+
+  const { data: commentsData, isLoading: isCommentsLoading } = useQuery({
+    queryKey: ['admin-feed-comments', filters.search],
+    queryFn: async () => {
+      const res = await feedApi.getAllComments({ search: filters.search, limit: 20 });
+      return res.data || [];
+    },
+    enabled: activeTab === 'comments',
+  });
+
+  const deleteCommentMutation = useMutation({
+    mutationFn: async (id: string) => {
+      return feedApi.deleteComment(id);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-feed-comments'] });
+    },
+  });
 
   const handleSort = (field: string) => {
     setFilters((prev) => ({
